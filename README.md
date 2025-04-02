@@ -56,13 +56,13 @@ Smart Planner 是一款結合「行事曆 + 備忘錄 + 待辦清單 + AI 智慧
 
 ## 畫面規劃(參考圖片)
 1. 首頁（行事曆 + 今日紀錄與輸入區）
-![首頁一般](https://github.com/gamefan/SmartPlanner/tree/main/readmePic/01.png)
-![首頁展開](https://github.com/gamefan/SmartPlanner/tree/main/readmePic/02.png)
+![首頁一般](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/01.png)
+![首頁展開](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/02.png)
 2. 通用備註頁
 3. 所有待辦清單頁
-![備注及待辦](https://github.com/gamefan/SmartPlanner/tree/main/readmePic/03.png)
+![備注及待辦](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/03.png)
 4. 標籤管理頁
-![標籤管理](https://github.com/gamefan/SmartPlanner/tree/main/readmePic/04.png)
+![標籤管理](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/04.png)
 
 ---
 
