@@ -1,16 +1,74 @@
-# smartplanner
 
-A new Flutter project.
+# 專題名稱：Smart Planner - 智慧語意行程助手
 
-## Getting Started
+## 專案簡介
+Smart Planner 是一款結合「行事曆 + 備忘錄 + 待辦清單 + AI 智慧分類」的生活管理 App，讓使用者能夠透過文字或語音方式，快速記錄想法與行程，並由 AI 自動分類為行程、待辦或備註。所有內容皆以日期為主軸顯示，並可集中檢視所有備註與待辦，支援標籤系統與語意拆解。
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+## 使用技術
+- Flutter
+- Riverpod 狀態管理
+- OpenAI GPT API（初期使用免費 API Key，可擴充為使用者自備或收費模式）
+- 語音轉文字（Speech to Text）
+- Flutter 本地儲存（SharedPreferences）
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 核心功能
+
+### 📅 首頁（行事曆總覽）
+- 顯示月曆與當日紀錄
+- 下半部為輸入區與當日待辦/備註清單
+- 可上拉展開，月曆縮小成簡易日期列，上下滑切換日期
+
+### ✏️ 輸入功能
+- 支援文字與語音輸入（語音轉文字）
+- 傳送至 GPT API 分析語意，分類為：
+  - 待辦（加至代辦清單）
+  - 備註（加至備註清單）
+
+### ✅ 待辦清單管理
+- 支援勾選完成 / 未完成狀態切換
+- 集合頁可查看所有待辦，依月/年篩選與完成率統計
+- 支援標籤顯示與過濾
+
+### 📝 備註管理
+- 每日可紀錄多筆備註
+- 通用備註分頁可檢視所有紀錄（跨日期檢視）
+- 支援標籤分類與過濾/搜尋
+
+### #️⃣ 標籤管理
+- 每筆輸入內容經 AI 分析，自動產生語意標籤（名詞、動詞、形容詞、主詞、受詞等）
+- 可手動新增/編輯標籤
+- 標籤管理頁支援分類、顏色區分建立來源（AI / 手動）
+- 支援長按進入多選刪除模式
+
+---
+
+## 擴充彈性（未列入初期開發）
+- AI 學習使用者習慣給予建議排程
+- 通知提醒與重排功能
+- 使用者可自備 API Key
+
+---
+
+
+## 畫面規劃(參考圖片)
+1. 首頁（行事曆 + 今日紀錄與輸入區）
+![首頁一般](https://github.com/gamefan/SmartPlanner/readmePic/01.png)
+![首頁展開](https://github.com/gamefan/SmartPlanner/readmePic/02.png)
+2. 通用備註頁
+3. 所有待辦清單頁
+![備注及待辦](https://github.com/gamefan/SmartPlanner/readmePic/03.png)
+4. 標籤管理頁
+![標籤管理](https://github.com/gamefan/SmartPlanner/readmePic/04.png)
+
+---
+
+## 使用者操作流程摘要
+1. 使用者輸入文字或語音內容
+2. 系統傳送至 OpenAI API 分析語意
+3. 根據回傳分類，自動加入 待辦 / 備註
+4. 可至集合頁快速查找所有紀錄與標籤
+
