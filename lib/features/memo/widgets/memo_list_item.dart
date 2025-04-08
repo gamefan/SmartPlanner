@@ -1,0 +1,51 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartplanner/models/memo_item.dart';
+import 'package:smartplanner/models/enum.dart';
+import 'package:smartplanner/providers/memo_provider.dart';
+
+/// 顯示一筆 Memo 項目（備註或待辦）
+class MemoListItem extends ConsumerWidget {
+  final MemoItem memo;
+
+  const MemoListItem({super.key, required this.memo});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = ref.read(memoProvider.notifier);
+
+    return ListTile(
+      dense: true,
+      leading: Icon(
+        memo.type == MemoType.todo ? Icons.check_circle_outline : Icons.edit_note,
+        color: memo.type == MemoType.todo ? Colors.green : Colors.blue,
+      ),
+      title: Text(
+        memo.content,
+        style: TextStyle(fontSize: 16, decoration: memo.isCompleted == true ? TextDecoration.lineThrough : null),
+      ),
+      subtitle: Text(_buildSubtitle(), style: const TextStyle(fontSize: 13, color: Colors.grey)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (memo.type == MemoType.todo)
+            Checkbox(value: memo.isCompleted ?? false, onChanged: (_) => provider.toggleTodoStatus(memo.id)),
+          IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => provider.deleteMemo(memo.id)),
+        ],
+      ),
+    );
+  }
+
+  /// 建立 subtitle 顯示內容（建立時間或時間區段）
+  String _buildSubtitle() {
+    final dt = memo.targetTime ?? memo.createdAt;
+    final dateStr = '${dt.year}/${dt.month}/${dt.day}';
+    final timeStr = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+
+    if (memo.type == MemoType.todo && memo.targetTime != null) {
+      return '待辦時間：$dateStr $timeStr';
+    } else {
+      return '建立於：$dateStr';
+    }
+  }
+}

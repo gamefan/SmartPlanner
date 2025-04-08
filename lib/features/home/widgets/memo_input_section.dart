@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/models/enum.dart';
+import 'dart:math'; // ⬅️ 記得加在檔案最上方
 
 /// 頁面下方的輸入欄位區塊，支援文字與語音輸入
 class MemoInputSection extends ConsumerWidget {
@@ -44,8 +45,11 @@ class MemoInputSection extends ConsumerWidget {
               inputText.trim().isEmpty
                   ? null
                   : () async {
-                    // TODO: 預設新增為備註，之後可根據 AI 分析判斷
-                    await viewModel.submitMemo(type: MemoType.note);
+                    // 🔧 測試用：隨機決定是備註還是待辦
+                    final isTodo = Random().nextBool();
+                    final type = isTodo ? MemoType.todo : MemoType.note;
+
+                    await viewModel.submitMemo(type: type);
                   },
         ),
       ],

@@ -37,6 +37,7 @@ dependencies:
   uuid: ^4.5.1
   flutter_riverpod: ^2.6.1
   shared_preferences: ^2.5.3
+  table_calendar: ^3.2.0
 
 dev_dependencies:
   flutter_test:

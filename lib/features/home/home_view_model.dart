@@ -21,31 +21,37 @@ class HomeViewModel extends StateNotifier<HomeState> {
 
   /// 更新選取的日期
   void selectDate(DateTime date) {
+    if (!mounted) return;
     state = state.copyWith(selectedDate: date);
   }
 
   /// 更新輸入中的內容
   void updateInput(String input) {
+    if (!mounted) return;
     state = state.copyWith(inputText: input);
   }
 
   /// 清空輸入框
   void clearInput() {
+    if (!mounted) return;
     state = state.copyWith(inputText: '');
   }
 
   /// 更新語音輸入的狀態
   void updateSpeechStatus(SpeechStatus status) {
+    if (!mounted) return;
     state = state.copyWith(speechStatus: status);
   }
 
   /// 切換下方展開狀態
   void toggleBottomExpanded() {
+    if (!mounted) return;
     state = state.copyWith(isBottomExpanded: !state.isBottomExpanded);
   }
 
   /// 設定下方展開狀態
   void setBottomExpanded(bool expanded) {
+    if (!mounted) return;
     state = state.copyWith(isBottomExpanded: expanded);
   }
 
@@ -64,18 +70,16 @@ class HomeViewModel extends StateNotifier<HomeState> {
   }
 
   /// 取得當日備註清單
-  List<MemoItem> get notesForSelectedDate =>
-      ref
-          .read(memoProvider)
-          .where((m) => m.type == MemoType.note && isSameDay(m.createdAt, state.selectedDate))
-          .toList();
+  List<MemoItem> get notesForSelectedDate {
+    final memos = ref.watch(memoProvider); // 改成 watch，會隨資料變化自動重建
+    return memos.where((m) => m.type == MemoType.note && isSameDay(m.createdAt, state.selectedDate)).toList();
+  }
 
   /// 取得當日待辦清單
-  List<MemoItem> get todosForSelectedDate =>
-      ref
-          .read(memoProvider)
-          .where((m) => m.type == MemoType.todo && isSameDay(m.createdAt, state.selectedDate))
-          .toList();
+  List<MemoItem> get todosForSelectedDate {
+    final memos = ref.watch(memoProvider); // 改成 watch，會隨資料變化自動重建
+    return memos.where((m) => m.type == MemoType.todo && isSameDay(m.createdAt, state.selectedDate)).toList();
+  }
 
   /// 判斷是否為同一天
   bool isSameDay(DateTime a, DateTime b) {
