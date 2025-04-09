@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartplanner/core/services/input_analyzer/hashtag_input_analyzer.dart';
 import 'package:smartplanner/core/services/input_analyzer/memo_input_analyzer.dart';
+import 'package:smartplanner/core/utils/util.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/models/hashtag.dart';
@@ -52,25 +54,37 @@ class MemoInputSection extends ConsumerWidget {
                     // 🧠 實際解析輸入內容
                     final analysis = await MemoInputAnalyzer.analyze(inputText.trim());
 
-                    // 提取已存在的 hashtag 資訊，轉換為 id 清單
+                    // 🔍 取得目前所有 hashtag 清單（比對是否已存在）
                     final allTags = ref.read(hashtagProvider);
-                    final existingTags = <String>[];
+                    final hashtagNotifier = ref.read(hashtagProvider.notifier);
+                    final tagIds = <String>[];
 
-                    for (final tag in analysis.hashtags) {
-                      final match = allTags.firstWhere(
-                        (t) => t.name == tag,
-                        orElse: () => Hashtag.empty(), // 你應該要有 empty() 預設值
-                      );
+                    // 🔄 對分析出來的 hashtag 名稱逐一處理
+                    for (final tagName in analysis.hashtags) {
+                      final match = allTags.firstWhere((t) => t.name == tagName, orElse: () => Hashtag.empty());
 
                       if (match.id.isNotEmpty) {
-                        existingTags.add(match.id);
+                        // ✅ 已存在的 hashtag，直接加入 id 清單
+                        tagIds.add(match.id);
+                      } else {
+                        // ✨ 不存在的 hashtag，自動建立新項目
+                        final category = await HashtagInputAnalyzer.analyzeCategory(tagName);
+                        final newTag = Hashtag(
+                          id: generateId(),
+                          name: tagName,
+                          source: HashtagSource.aiGenerated,
+                          category: category,
+                        );
+                        hashtagNotifier.addHashtag(newTag);
+                        tagIds.add(newTag.id);
                       }
                     }
 
+                    // ✅ 送出 Memo，包含分析得到的類型、時間與 hashtag id 清單
                     await viewModel.submitMemo(
                       type: analysis.type,
                       timeRangeType: analysis.timeRangeType,
-                      hashtags: existingTags,
+                      hashtags: tagIds,
                     );
                   },
         ),
