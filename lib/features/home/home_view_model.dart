@@ -56,7 +56,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
   }
 
   /// 新增備註或待辦（實際送出）
-  Future<void> submitMemo({required MemoType type}) async {
+  Future<void> submitMemo({required MemoType type, List<String> hashtags = const []}) async {
     final memo = MemoItem(
       id: generateId(),
       content: state.inputText.trim(),
@@ -64,6 +64,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
       createdAt: state.selectedDate,
       timeRangeType: type == MemoType.todo ? getTimeRangeTypeFromDateTime(state.selectedDate) : TimeRangeType.none,
       isCompleted: type == MemoType.todo ? false : null,
+      hashtags: hashtags,
     );
 
     await ref.read(memoProvider.notifier).addMemo(memo);

@@ -22,7 +22,7 @@ class MemoItem {
   /// 完成狀態（null 表示為備註，非待辦）
   final bool? isCompleted;
 
-  /// 標籤清單
+  /// 標籤清單(ID清單)
   final List<String> hashtags;
 
   /// 所屬時間區段分類（預設 none）

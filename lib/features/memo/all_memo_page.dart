@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartplanner/features/memo/widgets/hashtag_filter_bar.dart';
 import 'package:smartplanner/features/memo/widgets/memo_empty_placeholder.dart';
 import 'package:smartplanner/models/enum.dart';
-import 'package:smartplanner/models/memo_item.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
 import 'package:smartplanner/features/memo/widgets/memo_list_item.dart';
 import 'package:smartplanner/features/memo/widgets/memo_filter_bar.dart';
@@ -18,6 +18,7 @@ class AllMemoPage extends ConsumerStatefulWidget {
 class _AllMemoPageState extends ConsumerState<AllMemoPage> {
   MemoType? typeFilter; // 篩選：null = 全部
   bool? completedFilter; // 篩選：null = 全部，true = 完成，false = 未完成
+  Set<String> selectedIds = {}; // 多選 Hashtag 篩選 ID
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +34,12 @@ class _AllMemoPageState extends ConsumerState<AllMemoPage> {
               memo.type == MemoType.note || // 備註忽略完成狀態
               (memo.type == MemoType.todo && (memo.isCompleted ?? false) == completedFilter);
 
-          return typeOk && completedOk;
+          final hashtagOk =
+              selectedIds.isEmpty || selectedIds.every((id) => memo.hashtags.contains(id)); // ✅ 每個被選的 hashtag 都要符合
+
+          return typeOk && completedOk && hashtagOk;
         }).toList();
+
     // 排序處理
     filtered.sort((a, b) {
       // 1. 先依照類型排序（TODO 在前）
@@ -55,6 +60,12 @@ class _AllMemoPageState extends ConsumerState<AllMemoPage> {
             selectedCompleted: completedFilter,
             onTypeChanged: (type) => setState(() => typeFilter = type),
             onCompletedChanged: (completed) => setState(() => completedFilter = completed),
+          ),
+
+          // 新增 Hashtag 篩選條
+          HashtagFilterBar(
+            selectedHashtagIds: selectedIds,
+            onSelectionChanged: (newIds) => setState(() => selectedIds = newIds),
           ),
 
           const Divider(height: 1),

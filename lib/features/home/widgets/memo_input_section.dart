@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/models/enum.dart';
-import 'dart:math'; // ⬅️ 記得加在檔案最上方
+import 'dart:math';
+
+import 'package:smartplanner/providers/hashtag_provider.dart'; // ⬅️ 記得加在檔案最上方
 
 /// 頁面下方的輸入欄位區塊，支援文字與語音輸入
 class MemoInputSection extends ConsumerWidget {
@@ -49,7 +51,13 @@ class MemoInputSection extends ConsumerWidget {
                     final isTodo = Random().nextBool();
                     final type = isTodo ? MemoType.todo : MemoType.note;
 
-                    await viewModel.submitMemo(type: type);
+                    // 🔧 測試用：隨機取出 0～3 個 hashtag 的 id
+                    final allTags = ref.read(hashtagProvider);
+                    final random = Random();
+                    final shuffled = allTags.toList()..shuffle();
+                    final selected = shuffled.take(random.nextInt(4)).map((tag) => tag.id).toList();
+
+                    await viewModel.submitMemo(type: type, hashtags: selected);
                   },
         ),
       ],

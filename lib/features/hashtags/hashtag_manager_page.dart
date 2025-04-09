@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/core/utils/dialog_util.dart';
 import 'package:smartplanner/core/utils/util.dart';
+import 'package:smartplanner/features/hashtags/widgets/hashtag_chip.dart';
 import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/models/hashtag.dart';
 import 'package:smartplanner/providers/hashtag_provider.dart';
@@ -84,7 +85,6 @@ class _HashtagManagePageState extends ConsumerState<HashtagManagePage> {
                               category: _randomCategory(), //  TODO: 後續接 AI
                               source: _randomSource(), //TODO: 改回 HashtagSource.manual,
                             );
-
                             ref.read(hashtagProvider.notifier).addHashtag(tag);
                             _inputController.clear();
                             setState(() => _input = '');
@@ -101,7 +101,7 @@ class _HashtagManagePageState extends ConsumerState<HashtagManagePage> {
                     if (tags.isEmpty) return const SizedBox();
 
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 4), // 🔹 加入分類間距
+                      padding: const EdgeInsets.only(bottom: 4),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -127,39 +127,41 @@ class _HashtagManagePageState extends ConsumerState<HashtagManagePage> {
                             ),
                           ),
                           if (_expanded[cat]!)
-                            ...tags.map((tag) {
-                              final selected = _selectedIds.contains(tag.id);
-                              final isAi = tag.source == HashtagSource.aiGenerated;
-
-                              return Container(
-                                color:
-                                    selected
-                                        ? Colors.blue.shade50
-                                        : isAi
-                                        ? const Color(0xFFB0BEC5) // 鐵灰（AI）
-                                        : const Color(0xFFFFF9C4), // 黃膚（手動）
-                                child: ListTile(
-                                  title: Text(tag.name),
-                                  trailing: selected ? const Icon(Icons.check_circle, color: Colors.blue) : null,
-                                  onLongPress: () {
-                                    setState(() {
-                                      _selectedIds.contains(tag.id)
-                                          ? _selectedIds.remove(tag.id)
-                                          : _selectedIds.add(tag.id);
-                                    });
-                                  },
-                                  onTap: () {
-                                    if (_selectedIds.isNotEmpty) {
-                                      setState(() {
-                                        _selectedIds.contains(tag.id)
-                                            ? _selectedIds.remove(tag.id)
-                                            : _selectedIds.add(tag.id);
-                                      });
-                                    }
-                                  },
-                                ),
-                              );
-                            }),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children:
+                                    tags.map((tag) {
+                                      return HashtagChip(
+                                        tag: tag,
+                                        isSelected: _selectedIds.contains(tag.id),
+                                        onTap: () {
+                                          if (_selectedIds.isNotEmpty) {
+                                            setState(() {
+                                              _toggleSelected(tag.id);
+                                            });
+                                          }
+                                        },
+                                        onLongPress: () {
+                                          setState(() {
+                                            _toggleSelected(tag.id);
+                                          });
+                                        },
+                                        onDelete: () async {
+                                          final confirm = await showConfirmDeleteDialog(
+                                            context,
+                                            message: '確認要刪除這個 Hashtag 嗎？',
+                                          );
+                                          if (confirm) {
+                                            ref.read(hashtagProvider.notifier).deleteHashtag(tag.id);
+                                          }
+                                        },
+                                      );
+                                    }).toList(),
+                              ),
+                            ),
                         ],
                       ),
                     );
@@ -188,13 +190,15 @@ class _HashtagManagePageState extends ConsumerState<HashtagManagePage> {
     }
   }
 
-  /// ⚠️ 暫用：產生隨機分類（未來用 AI 取代）
+  void _toggleSelected(String id) {
+    _selectedIds.contains(id) ? _selectedIds.remove(id) : _selectedIds.add(id);
+  }
+
   HashtagCategory _randomCategory() {
     final values = HashtagCategory.values;
     return values[Random().nextInt(values.length)];
   }
 
-  /// ⚠️ 暫用：產生隨機分類（未來用 AI 取代）
   HashtagSource _randomSource() {
     final values = HashtagSource.values;
     return values[Random().nextInt(values.length)];

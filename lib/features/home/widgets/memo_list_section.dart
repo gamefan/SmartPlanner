@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/core/utils/dialog_util.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/models/memo_item.dart';
+import 'package:smartplanner/providers/hashtag_provider.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
+import 'package:smartplanner/widgets/memo_hashtag_row.dart';
 
 /// 顯示當前選取日期的待辦與備註清單，可展開／收合
 class MemoListSection extends ConsumerStatefulWidget {
@@ -80,26 +82,35 @@ class _TodoTile extends ConsumerWidget {
           ),
         ),
       ),
-      child: ListTile(
-        dense: true,
-        title: Text(
-          item.content,
-          style: TextStyle(fontSize: 16, decoration: item.isCompleted == true ? TextDecoration.lineThrough : null),
-        ),
-        subtitle:
-            item.targetTime != null
-                ? Text('時間：${item.targetTime!.hour}:${item.targetTime!.minute.toString().padLeft(2, '0')}')
-                : null,
-        leading: Checkbox(value: item.isCompleted ?? false, onChanged: (_) => provider.toggleTodoStatus(item.id)),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline),
-          onPressed: () async {
-            final confirm = await showConfirmDeleteDialog(context);
-            if (confirm) {
-              provider.deleteMemo(item.id);
-            }
-          },
-        ),
+      child: Column(
+        children: [
+          ListTile(
+            dense: true,
+            title: Text(
+              item.content,
+              style: TextStyle(fontSize: 16, decoration: item.isCompleted == true ? TextDecoration.lineThrough : null),
+            ),
+            subtitle:
+                item.targetTime != null
+                    ? Text('時間：${item.targetTime!.hour}:${item.targetTime!.minute.toString().padLeft(2, '0')}')
+                    : null,
+            leading: Checkbox(value: item.isCompleted ?? false, onChanged: (_) => provider.toggleTodoStatus(item.id)),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () async {
+                final confirm = await showConfirmDeleteDialog(context);
+                if (confirm) {
+                  provider.deleteMemo(item.id);
+                }
+              },
+            ),
+          ),
+          if (item.hashtags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 8, bottom: 8),
+              child: MemoHashtagRow(hashtagIds: item.hashtags),
+            ),
+        ],
       ),
     );
   }
@@ -113,28 +124,37 @@ class _NoteTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = ref.read(memoProvider.notifier);
-
     return Container(
       decoration: const BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Color(0xFFEEEEEE), // 非常淡的灰（你可以調成 0xFFF2F2F2 更淡）
+            color: Color(0xFFEEEEEE), // 非常淡的灰
             width: 1,
           ),
         ),
       ),
-      child: ListTile(
-        dense: true,
-        title: Text(item.content, style: const TextStyle(fontSize: 16)),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline),
-          onPressed: () async {
-            final confirm = await showConfirmDeleteDialog(context);
-            if (confirm) {
-              provider.deleteMemo(item.id);
-            }
-          },
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            dense: true,
+            title: Text(item.content, style: const TextStyle(fontSize: 16)),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () async {
+                final confirm = await showConfirmDeleteDialog(context);
+                if (confirm) {
+                  provider.deleteMemo(item.id);
+                }
+              },
+            ),
+          ),
+          if (item.hashtags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 8, bottom: 8),
+              child: MemoHashtagRow(hashtagIds: item.hashtags),
+            ),
+        ],
       ),
     );
   }
