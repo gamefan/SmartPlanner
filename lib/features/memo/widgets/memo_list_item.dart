@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartplanner/core/utils/dialog_util.dart';
 import 'package:smartplanner/models/memo_item.dart';
 import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
@@ -30,7 +31,15 @@ class MemoListItem extends ConsumerWidget {
         children: [
           if (memo.type == MemoType.todo)
             Checkbox(value: memo.isCompleted ?? false, onChanged: (_) => provider.toggleTodoStatus(memo.id)),
-          IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => provider.deleteMemo(memo.id)),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () async {
+              final confirm = await showConfirmDeleteDialog(context);
+              if (confirm) {
+                provider.deleteMemo(memo.id);
+              }
+            },
+          ),
         ],
       ),
     );

@@ -22,8 +22,23 @@ class HomePage extends ConsumerWidget {
     final viewModel = ref.read(homeViewModelProvider.notifier);
 
     return Scaffold(
-      appBar: state.isBottomExpanded ? null : AppBar(title: const Text('Smart Planner'), centerTitle: true),
-
+      endDrawer: _buildDrawer(context),
+      appBar:
+          state.isBottomExpanded
+              ? null
+              : AppBar(
+                title: const Text('Smart Planner'),
+                centerTitle: true,
+                actions: [
+                  Builder(
+                    builder:
+                        (context) => IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.of(context).openEndDrawer(),
+                        ),
+                  ),
+                ],
+              ),
       body: SafeArea(
         child: GestureDetector(
           onVerticalDragUpdate: (details) {
@@ -144,17 +159,57 @@ class HomePage extends ConsumerWidget {
                   alignment: Alignment.topRight,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 2, right: 6),
-                    child: FloatingActionButton.small(
-                      heroTag: 'menu',
-                      onPressed: () {
-                        // TODO: 開啟功能選單
-                      },
-                      child: const Icon(Icons.menu),
+                    child: Builder(
+                      // 加這個 Builder，才能使用到context
+                      builder:
+                          (context) => FloatingActionButton.small(
+                            heroTag: 'menu',
+                            onPressed: () => Scaffold.of(context).openEndDrawer(),
+                            child: const Icon(Icons.menu),
+                          ),
                     ),
                   ),
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// 建立側邊選單（Drawer）
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            Container(
+              height: 40,
+              color: const Color(0xFFBBDEFB),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: const Text('選單', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.view_list),
+              title: const Text('所有記事'),
+              onTap: () {
+                Navigator.pop(context); // 關閉 Drawer
+                Navigator.pushNamed(context, '/allMemos');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.label),
+              title: const Text('Hashtag 管理'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/hashtagManage');
+              },
+            ),
+            // 可擴充更多功能
+          ],
         ),
       ),
     );

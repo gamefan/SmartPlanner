@@ -63,6 +63,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
       type: type,
       createdAt: state.selectedDate,
       timeRangeType: type == MemoType.todo ? getTimeRangeTypeFromDateTime(state.selectedDate) : TimeRangeType.none,
+      isCompleted: type == MemoType.todo ? false : null,
     );
 
     await ref.read(memoProvider.notifier).addMemo(memo);

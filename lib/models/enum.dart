@@ -43,3 +43,33 @@ enum SpeechStatus {
   /// 出錯
   error,
 }
+
+/// 標籤的來源類型
+enum HashtagSource {
+  /// 使用者手動新增
+  manual,
+
+  /// AI 自動解析產生
+  aiGenerated,
+}
+
+/// 標籤的語意分類
+enum HashtagCategory {
+  /// 名詞（例如：早餐機、健身房）
+  noun,
+
+  /// 動詞（例如：購買、運動）
+  verb,
+
+  /// 形容詞（例如：重要、快速）
+  adjective,
+
+  /// 主詞（例如：我、媽媽）
+  subject,
+
+  /// 受詞（例如：文件、禮物）
+  object,
+
+  /// 其他無法分類的
+  unknown,
+}

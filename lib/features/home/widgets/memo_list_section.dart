@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartplanner/core/utils/dialog_util.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/models/memo_item.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
@@ -90,7 +91,15 @@ class _TodoTile extends ConsumerWidget {
                 ? Text('時間：${item.targetTime!.hour}:${item.targetTime!.minute.toString().padLeft(2, '0')}')
                 : null,
         leading: Checkbox(value: item.isCompleted ?? false, onChanged: (_) => provider.toggleTodoStatus(item.id)),
-        trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => provider.deleteMemo(item.id)),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline),
+          onPressed: () async {
+            final confirm = await showConfirmDeleteDialog(context);
+            if (confirm) {
+              provider.deleteMemo(item.id);
+            }
+          },
+        ),
       ),
     );
   }
@@ -117,7 +126,15 @@ class _NoteTile extends ConsumerWidget {
       child: ListTile(
         dense: true,
         title: Text(item.content, style: const TextStyle(fontSize: 16)),
-        trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => provider.deleteMemo(item.id)),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline),
+          onPressed: () async {
+            final confirm = await showConfirmDeleteDialog(context);
+            if (confirm) {
+              provider.deleteMemo(item.id);
+            }
+          },
+        ),
       ),
     );
   }
