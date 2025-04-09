@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smartplanner/core/services/storage_service.dart';
 
 import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/models/hashtag.dart';
@@ -9,19 +10,15 @@ import 'package:smartplanner/models/hashtag.dart';
 class HashtagNotifier extends StateNotifier<List<Hashtag>> {
   HashtagNotifier() : super([]);
 
+  final storageService = StorageService();
   // 載入本地儲存資料
   Future<void> loadFromStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = prefs.getStringList('hashtags') ?? [];
-
-    state = jsonList.map((e) => Hashtag.fromJson(json.decode(e))).toList();
+    state = await storageService.loadHashtags();
   }
 
   // 儲存資料到本地
   Future<void> saveToStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = state.map((e) => json.encode(e.toJson())).toList();
-    await prefs.setStringList('hashtags', jsonList);
+    await storageService.saveHashtags(state);
   }
 
   /// 新增一個 Hashtag（避免重複名稱）

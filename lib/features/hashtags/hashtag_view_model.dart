@@ -1,1 +1,0 @@
-// Hashtag view model
