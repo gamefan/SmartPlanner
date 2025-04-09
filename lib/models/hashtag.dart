@@ -26,6 +26,12 @@ class Hashtag {
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
+  /// 空的 Hashtag 物件
+  factory Hashtag.empty() => Hashtag(id: '', name: '', source: HashtagSource.manual, category: HashtagCategory.unknown);
+
+  bool get isEmpty => id.isEmpty;
+  bool get isNotEmpty => id.isNotEmpty;
+
   /// 建立新的 Hashtag（簡化版）
   factory Hashtag.simple(String name, {HashtagSource source = HashtagSource.manual}) {
     return Hashtag(id: generateId(), name: name, source: source);

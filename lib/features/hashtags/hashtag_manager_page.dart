@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartplanner/core/services/input_analyzer/hashtag_input_analyzer.dart';
 import 'package:smartplanner/core/utils/dialog_util.dart';
 import 'package:smartplanner/core/utils/util.dart';
 import 'package:smartplanner/features/hashtags/widgets/hashtag_chip.dart';
@@ -78,13 +79,17 @@ class _HashtagManagePageState extends ConsumerState<HashtagManagePage> {
                   onPressed:
                       _input.trim().isEmpty
                           ? null
-                          : () {
+                          : () async {
+                            final name = _input.trim();
+                            final category = await HashtagInputAnalyzer.analyzeCategory(name);
+
                             final tag = Hashtag(
                               id: generateId(),
-                              name: _input.trim(),
-                              category: _randomCategory(), //  TODO: 後續接 AI
-                              source: _randomSource(), //TODO: 改回 HashtagSource.manual,
+                              name: name,
+                              category: category,
+                              source: HashtagSource.manual,
                             );
+
                             ref.read(hashtagProvider.notifier).addHashtag(tag);
                             _inputController.clear();
                             setState(() => _input = '');
@@ -192,15 +197,5 @@ class _HashtagManagePageState extends ConsumerState<HashtagManagePage> {
 
   void _toggleSelected(String id) {
     _selectedIds.contains(id) ? _selectedIds.remove(id) : _selectedIds.add(id);
-  }
-
-  HashtagCategory _randomCategory() {
-    final values = HashtagCategory.values;
-    return values[Random().nextInt(values.length)];
-  }
-
-  HashtagSource _randomSource() {
-    final values = HashtagSource.values;
-    return values[Random().nextInt(values.length)];
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartplanner/core/services/input_analyzer/memo_input_analyzer.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/models/enum.dart';
+import 'package:smartplanner/models/hashtag.dart';
 import 'dart:math';
 
 import 'package:smartplanner/providers/hashtag_provider.dart'; // ⬅️ 記得加在檔案最上方
@@ -47,17 +49,29 @@ class MemoInputSection extends ConsumerWidget {
               inputText.trim().isEmpty
                   ? null
                   : () async {
-                    // 🔧 測試用：隨機決定是備註還是待辦
-                    final isTodo = Random().nextBool();
-                    final type = isTodo ? MemoType.todo : MemoType.note;
+                    // 🧠 實際解析輸入內容
+                    final analysis = await MemoInputAnalyzer.analyze(inputText.trim());
 
-                    // 🔧 測試用：隨機取出 0～3 個 hashtag 的 id
+                    // 提取已存在的 hashtag 資訊，轉換為 id 清單
                     final allTags = ref.read(hashtagProvider);
-                    final random = Random();
-                    final shuffled = allTags.toList()..shuffle();
-                    final selected = shuffled.take(random.nextInt(4)).map((tag) => tag.id).toList();
+                    final existingTags = <String>[];
 
-                    await viewModel.submitMemo(type: type, hashtags: selected);
+                    for (final tag in analysis.hashtags) {
+                      final match = allTags.firstWhere(
+                        (t) => t.name == tag,
+                        orElse: () => Hashtag.empty(), // 你應該要有 empty() 預設值
+                      );
+
+                      if (match.id.isNotEmpty) {
+                        existingTags.add(match.id);
+                      }
+                    }
+
+                    await viewModel.submitMemo(
+                      type: analysis.type,
+                      timeRangeType: analysis.timeRangeType,
+                      hashtags: existingTags,
+                    );
                   },
         ),
       ],
