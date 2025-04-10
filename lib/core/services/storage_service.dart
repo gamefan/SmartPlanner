@@ -7,6 +7,7 @@ import 'package:smartplanner/models/memo_item.dart';
 class StorageService {
   static const String memoKey = 'memo_items';
   static const String hashtagKey = 'hashtags';
+  static const String apiKey = 'openai_api_key';
 
   /// 儲存 Memo 清單至 SharedPreferences
   Future<void> saveMemos(List<MemoItem> memos) async {
@@ -37,5 +38,17 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     final jsonList = prefs.getStringList(hashtagKey) ?? [];
     return jsonList.map((e) => Hashtag.fromJson(json.decode(e))).toList();
+  }
+
+  /// 儲存 OpenAI API Key
+  Future<void> saveApiKey(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(apiKey, key);
+  }
+
+  /// 讀取 OpenAI API Key（若無則回傳 null）
+  Future<String?> loadApiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(apiKey);
   }
 }

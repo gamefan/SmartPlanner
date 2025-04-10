@@ -7,6 +7,7 @@
 根據選取日期取得備註與待辦清單
  */
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
 import 'package:smartplanner/models/memo_item.dart';
@@ -32,9 +33,9 @@ class HomeViewModel extends StateNotifier<HomeState> {
   }
 
   /// 清空輸入框
-  void clearInput() {
+  void clearInput({bool? preserveExpanded}) {
     if (!mounted) return;
-    state = state.copyWith(inputText: '');
+    state = state.copyWith(inputText: '', isBottomExpanded: preserveExpanded ?? state.isBottomExpanded);
   }
 
   /// 更新語音輸入的狀態
@@ -61,6 +62,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
     required TimeRangeType timeRangeType,
     List<String> hashtags = const [],
   }) async {
+    final wasExpanded = state.isBottomExpanded; // ✅ 儲存原本狀態
     final memo = MemoItem(
       id: generateId(),
       content: state.inputText.trim(),
@@ -72,7 +74,10 @@ class HomeViewModel extends StateNotifier<HomeState> {
     );
 
     await ref.read(memoProvider.notifier).addMemo(memo);
-    clearInput();
+    // 使用 post-frame callback 確保畫面結束後才更新狀態
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      clearInput(preserveExpanded: wasExpanded);
+    });
   }
 
   /// 取得當日備註清單

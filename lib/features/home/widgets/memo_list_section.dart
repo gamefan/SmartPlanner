@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/core/utils/dialog_util.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
+import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/models/memo_item.dart';
-import 'package:smartplanner/providers/hashtag_provider.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
 import 'package:smartplanner/widgets/memo_hashtag_row.dart';
 
@@ -21,10 +21,15 @@ class _MemoListSectionState extends ConsumerState<MemoListSection> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = ref.watch(homeViewModelProvider.notifier);
-    final state = ref.watch(homeViewModelProvider); // 觸發 rebuild
-    final todos = viewModel.todosForSelectedDate;
-    final notes = viewModel.notesForSelectedDate;
+    final memos = ref.watch(memoProvider);
+    final selectedDate = ref.watch(homeViewModelProvider).selectedDate;
+
+    bool isSameDay(DateTime a, DateTime b) {
+      return a.year == b.year && a.month == b.month && a.day == b.day;
+    }
+
+    final todos = memos.where((m) => m.type == MemoType.todo && isSameDay(m.createdAt, selectedDate)).toList();
+    final notes = memos.where((m) => m.type == MemoType.note && isSameDay(m.createdAt, selectedDate)).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,9 +111,12 @@ class _TodoTile extends ConsumerWidget {
             ),
           ),
           if (item.hashtags.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(left: 16, right: 8, bottom: 8),
-              child: MemoHashtagRow(hashtagIds: item.hashtags),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 8, bottom: 8),
+                child: MemoHashtagRow(hashtagIds: item.hashtags),
+              ),
             ),
         ],
       ),

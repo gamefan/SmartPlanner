@@ -1,1 +1,0 @@
-// OpenAI GPT API service

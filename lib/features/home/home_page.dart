@@ -208,6 +208,14 @@ class HomePage extends ConsumerWidget {
                 Navigator.pushNamed(context, '/hashtagManage');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Setting 設定'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
             // 可擴充更多功能
           ],
         ),

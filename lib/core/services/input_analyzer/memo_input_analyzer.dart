@@ -1,12 +1,37 @@
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:smartplanner/core/utils/util.dart';
 import 'package:smartplanner/models/enum.dart';
+import 'package:smartplanner/core/services/openai/openai_prompt_helper.dart';
+import 'package:smartplanner/core/services/openai/openai_response_parser.dart';
+import 'package:smartplanner/core/services/openai/openai_service.dart';
+import 'package:flutter/services.dart'; // ✅ 系統剪貼簿功能
 
 /// 分析輸入內容（備註或待辦），預測其類型、時間與關聯 hashtags。
 class MemoInputAnalyzer {
-  /// 正式用的分析方法（未來可接 GPT 回傳）
+  /// 正式用的分析方法（GPT 回傳）
   static Future<AnalyzedMemoResult> analyze(String input) async {
-    // 目前先使用 rule-based，未來這裡會改為 call OpenAI
-    return ruleAnalyze(input);
+    try {
+      final prompt = OpenAiPromptHelper.buildMemoAnalysisPrompt(input);
+      final response = await OpenAiService.sendPrompt(prompt: prompt);
+
+      if (response == null) {
+        throw Exception('GPT 回傳為空');
+      }
+
+      final result = OpenAiResponseParser.parseMemoAnalysis(response);
+
+      if (result == null) {
+        throw Exception('GPT 回傳格式錯誤');
+      }
+
+      return result;
+    } catch (e) {
+      print('❌ GPT 分析失敗：$e');
+      Fluttertoast.showToast(msg: "AI 分析失敗 $e，改用預設規則判斷", toastLength: Toast.LENGTH_SHORT, gravity: ToastGravity.BOTTOM);
+      // 🔧 複製錯誤訊息到系統剪貼簿
+      await Clipboard.setData(ClipboardData(text: e.toString()));
+      return ruleAnalyze(input); // fallback
+    }
   }
 
   /// 本地分析規則（供測試使用，或 GPT 備援 fallback）

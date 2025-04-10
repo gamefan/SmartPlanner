@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/features/hashtags/hashtag_manager_page.dart';
 import 'package:smartplanner/features/home/home_page.dart';
 import 'package:smartplanner/features/memo/all_memo_page.dart';
+import 'package:smartplanner/features/settings/settings_page.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
 
 /// App 入口點
@@ -29,7 +30,11 @@ class MyApp extends ConsumerWidget {
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue), useMaterial3: true),
       debugShowCheckedModeBanner: false,
       home: const HomePage(),
-      routes: {'/allMemos': (_) => const AllMemoPage(), '/hashtagManage': (context) => const HashtagManagePage()},
+      routes: {
+        '/allMemos': (_) => const AllMemoPage(),
+        '/hashtagManage': (_) => const HashtagManagePage(),
+        '/settings': (_) => const SettingsPage(), // 設定頁 route
+      },
     );
   }
 }

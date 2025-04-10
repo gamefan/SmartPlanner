@@ -1,9 +1,27 @@
 import 'package:smartplanner/models/enum.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:smartplanner/core/services/openai/openai_prompt_helper.dart';
+import 'package:smartplanner/core/services/openai/openai_response_parser.dart';
+import 'package:smartplanner/core/services/openai/openai_service.dart';
 
 /// 分析單一 hashtag 的文字，推論其語意分類
 class HashtagInputAnalyzer {
   static Future<HashtagCategory> analyzeCategory(String text) async {
-    return ruleAnalyzeCategory(text); // 未來換 GPT 分類
+    try {
+      final prompt = OpenAiPromptHelper.buildHashtagCategoryPrompt(text);
+      final response = await OpenAiService.sendPrompt(prompt: prompt);
+
+      if (response == null) {
+        throw Exception('GPT 回傳為空');
+      }
+
+      final category = OpenAiResponseParser.parseHashtagCategory(response);
+      return category;
+    } catch (e) {
+      print('❌ GPT 標籤分類失敗：$e');
+      Fluttertoast.showToast(msg: "AI 無法辨識分類，改用內建規則", toastLength: Toast.LENGTH_SHORT, gravity: ToastGravity.BOTTOM);
+      return ruleAnalyzeCategory(text);
+    }
   }
 
   /// 分析語意分類（名詞、動詞、形容詞等）

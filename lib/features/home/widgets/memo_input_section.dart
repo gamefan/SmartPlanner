@@ -2,30 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/core/services/input_analyzer/hashtag_input_analyzer.dart';
 import 'package:smartplanner/core/services/input_analyzer/memo_input_analyzer.dart';
+import 'package:smartplanner/core/services/speech_input_service.dart';
 import 'package:smartplanner/core/utils/util.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/models/hashtag.dart';
-import 'dart:math';
 
-import 'package:smartplanner/providers/hashtag_provider.dart'; // ⬅️ 記得加在檔案最上方
+import 'package:smartplanner/providers/hashtag_provider.dart';
+import 'package:smartplanner/widgets/voice_input_dialog.dart';
 
 /// 頁面下方的輸入欄位區塊，支援文字與語音輸入
-class MemoInputSection extends ConsumerWidget {
+class MemoInputSection extends ConsumerStatefulWidget {
   const MemoInputSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MemoInputSection> createState() => _MemoInputSectionState();
+}
+
+class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
+  final _speechService = SpeechInputService();
+
+  @override
+  void initState() {
+    super.initState();
+    _speechService.init();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final viewModel = ref.read(homeViewModelProvider.notifier);
     final inputText = ref.watch(homeViewModelProvider).inputText;
 
     return Row(
       children: [
-        // 語音按鈕（未實作）
+        // 🎤 語音按鈕
         IconButton(
           icon: const Icon(Icons.mic),
           onPressed: () {
-            // TODO: 未來加入語音輸入邏輯
+            showVoiceInputDialog(
+              context,
+              onResult: (text) {
+                ref.read(homeViewModelProvider.notifier).updateInput(text);
+              },
+            );
           },
         ),
 
@@ -51,23 +70,18 @@ class MemoInputSection extends ConsumerWidget {
               inputText.trim().isEmpty
                   ? null
                   : () async {
-                    // 🧠 實際解析輸入內容
                     final analysis = await MemoInputAnalyzer.analyze(inputText.trim());
 
-                    // 🔍 取得目前所有 hashtag 清單（比對是否已存在）
                     final allTags = ref.read(hashtagProvider);
                     final hashtagNotifier = ref.read(hashtagProvider.notifier);
                     final tagIds = <String>[];
 
-                    // 🔄 對分析出來的 hashtag 名稱逐一處理
                     for (final tagName in analysis.hashtags) {
                       final match = allTags.firstWhere((t) => t.name == tagName, orElse: () => Hashtag.empty());
 
                       if (match.id.isNotEmpty) {
-                        // ✅ 已存在的 hashtag，直接加入 id 清單
                         tagIds.add(match.id);
                       } else {
-                        // ✨ 不存在的 hashtag，自動建立新項目
                         final category = await HashtagInputAnalyzer.analyzeCategory(tagName);
                         final newTag = Hashtag(
                           id: generateId(),
@@ -80,7 +94,6 @@ class MemoInputSection extends ConsumerWidget {
                       }
                     }
 
-                    // ✅ 送出 Memo，包含分析得到的類型、時間與 hashtag id 清單
                     await viewModel.submitMemo(
                       type: analysis.type,
                       timeRangeType: analysis.timeRangeType,
