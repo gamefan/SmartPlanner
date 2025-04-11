@@ -21,87 +21,112 @@ class MemoInputSection extends ConsumerStatefulWidget {
 
 class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
   final _speechService = SpeechInputService();
+  late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
     _speechService.init();
+
+    _focusNode = FocusNode();
+    _focusNode.addListener(() {
+      _updateFloatingState();
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _updateFloatingState() {
+    final viewModel = ref.read(homeViewModelProvider.notifier);
+    final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    final focus = _focusNode.hasFocus;
+    final shouldFloat = focus || keyboardOpen;
+
+    viewModel.setKeyboardFloating(shouldFloat);
   }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.read(homeViewModelProvider.notifier);
     final inputText = ref.watch(homeViewModelProvider).inputText;
+    final isFloating = ref.watch(homeViewModelProvider).isKeyboardFloating;
 
-    return Row(
-      children: [
-        // 🎤 語音按鈕
-        IconButton(
-          icon: const Icon(Icons.mic),
-          onPressed: () {
-            showVoiceInputDialog(
-              context,
-              onResult: (text) {
-                ref.read(homeViewModelProvider.notifier).updateInput(text);
-              },
-            );
-          },
-        ),
+    // 每一幀都同步檢查一次鍵盤狀態，避免卡死
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateFloatingState());
 
-        // 輸入框
-        Expanded(
-          child: TextField(
-            decoration: const InputDecoration(
-              hintText: '輸入備註或待辦內容',
-              border: OutlineInputBorder(),
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            controller: TextEditingController(text: inputText)
-              ..selection = TextSelection.collapsed(offset: inputText.length),
-            onChanged: viewModel.updateInput,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(isFloating ? 12 : 0),
+        boxShadow: isFloating ? [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))] : null,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.mic),
+            onPressed: () {
+              showVoiceInputDialog(
+                context,
+                onResult: (text) {
+                  ref.read(homeViewModelProvider.notifier).updateInput(text);
+                },
+              );
+            },
           ),
-        ),
-
-        // 傳送按鈕
-        IconButton(
-          icon: const Icon(Icons.send),
-          onPressed:
-              inputText.trim().isEmpty
-                  ? null
-                  : () async {
-                    final analysis = await MemoInputAnalyzer.analyze(inputText.trim());
-
-                    final allTags = ref.read(hashtagProvider);
-                    final hashtagNotifier = ref.read(hashtagProvider.notifier);
-                    final tagIds = <String>[];
-
-                    for (final tagName in analysis.hashtags) {
-                      final match = allTags.firstWhere((t) => t.name == tagName, orElse: () => Hashtag.empty());
-
-                      if (match.id.isNotEmpty) {
-                        tagIds.add(match.id);
-                      } else {
-                        final category = await HashtagInputAnalyzer.analyzeCategory(tagName);
-                        final newTag = Hashtag(
-                          id: generateId(),
-                          name: tagName,
-                          source: HashtagSource.aiGenerated,
-                          category: category,
-                        );
-                        hashtagNotifier.addHashtag(newTag);
-                        tagIds.add(newTag.id);
-                      }
-                    }
-
-                    await viewModel.submitMemo(
-                      type: analysis.type,
-                      timeRangeType: analysis.timeRangeType,
-                      hashtags: tagIds,
-                    );
-                  },
-        ),
-      ],
+          Expanded(
+            child: TextField(
+              focusNode: _focusNode,
+              decoration: const InputDecoration(
+                hintText: '輸入備註或待辦內容',
+                border: OutlineInputBorder(),
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              controller: TextEditingController(text: inputText)
+                ..selection = TextSelection.collapsed(offset: inputText.length),
+              onChanged: viewModel.updateInput,
+              onSubmitted: (_) => _handleSubmit(),
+            ),
+          ),
+          IconButton(icon: const Icon(Icons.send), onPressed: inputText.trim().isEmpty ? null : _handleSubmit),
+        ],
+      ),
     );
+  }
+
+  Future<void> _handleSubmit() async {
+    final viewModel = ref.read(homeViewModelProvider.notifier);
+    final inputText = ref.read(homeViewModelProvider).inputText.trim();
+
+    if (inputText.isEmpty) return;
+
+    final analysis = await MemoInputAnalyzer.analyze(inputText);
+
+    final allTags = ref.read(hashtagProvider);
+    final hashtagNotifier = ref.read(hashtagProvider.notifier);
+    final tagIds = <String>[];
+
+    for (final tagName in analysis.hashtags) {
+      final match = allTags.firstWhere((t) => t.name == tagName, orElse: () => Hashtag.empty());
+
+      if (match.id.isNotEmpty) {
+        tagIds.add(match.id);
+      } else {
+        final category = await HashtagInputAnalyzer.analyzeCategory(tagName);
+        final newTag = Hashtag(id: generateId(), name: tagName, source: HashtagSource.aiGenerated, category: category);
+        hashtagNotifier.addHashtag(newTag);
+        tagIds.add(newTag.id);
+      }
+    }
+
+    await viewModel.submitMemo(type: analysis.type, timeRangeType: analysis.timeRangeType, hashtags: tagIds);
+
+    _focusNode.unfocus(); // ✅ 提交後自動取消焦點，關閉鍵盤
   }
 }

@@ -21,6 +21,9 @@ class HomePage extends ConsumerWidget {
     final state = ref.watch(homeViewModelProvider);
     final viewModel = ref.read(homeViewModelProvider.notifier);
 
+    /// 根據鍵盤狀態決定是否顯示輸入框
+    final isFloating = state.isKeyboardFloating;
+
     return Scaffold(
       endDrawer: _buildDrawer(context),
       appBar:
@@ -41,6 +44,10 @@ class HomePage extends ConsumerWidget {
               ),
       body: SafeArea(
         child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () {
+            FocusScope.of(context).unfocus(); // 點空白區自動取消輸入
+          },
           onVerticalDragUpdate: (details) {
             if (details.primaryDelta != null) {
               if (details.primaryDelta! < -10) {
@@ -51,10 +58,11 @@ class HomePage extends ConsumerWidget {
             }
           },
           child: Stack(
+            fit: StackFit.expand, // 讓整個畫面能當作定位基準
             children: [
               Column(
                 children: [
-                  // 上方月曆或日期區塊
+                  // 上方月曆區塊（你的原樣式）
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     transitionBuilder: (child, animation) {
@@ -106,24 +114,17 @@ class HomePage extends ConsumerWidget {
                                   formatButtonVisible: false,
                                   titleCentered: true,
                                   decoration: BoxDecoration(
-                                    color: Color(0xFFFFEBEE), // 淺粉紅
-                                    borderRadius: BorderRadius.vertical(top: Radius.circular(8)), // 加圓角
+                                    color: Color(0xFFFFEBEE),
+                                    borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
                                   ),
-                                  headerMargin: EdgeInsets.symmetric(vertical: 4), // 外距
-                                  headerPadding: EdgeInsets.symmetric(vertical: 2), // 內距，控制高度用
+                                  headerMargin: EdgeInsets.symmetric(vertical: 4),
+                                  headerPadding: EdgeInsets.symmetric(vertical: 2),
                                 ),
-
                                 calendarStyle: const CalendarStyle(
                                   todayDecoration: BoxDecoration(color: Color(0xFFE0E0E0), shape: BoxShape.circle),
-                                  todayTextStyle: TextStyle(
-                                    color: Colors.black87, // 深灰
-                                    fontWeight: FontWeight.w500, // 微粗一點
-                                  ),
+                                  todayTextStyle: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
                                   selectedDecoration: BoxDecoration(color: Color(0xFFBBDEFB), shape: BoxShape.circle),
-                                  selectedTextStyle: TextStyle(
-                                    color: Color(0xFF212121), // 深灰
-                                    fontWeight: FontWeight.w500, // 微粗一點
-                                  ),
+                                  selectedTextStyle: TextStyle(color: Color(0xFF212121), fontWeight: FontWeight.w500),
                                 ),
                               ),
                             ),
@@ -141,26 +142,46 @@ class HomePage extends ConsumerWidget {
                                 ? const BorderRadius.vertical(top: Radius.circular(16))
                                 : BorderRadius.zero,
                       ),
-                      child: Column(
-                        children: const [
-                          MemoInputSection(),
-                          SizedBox(height: 12),
-                          Expanded(child: SingleChildScrollView(child: MemoListSection())),
-                        ],
-                      ),
+                      child: const SingleChildScrollView(child: MemoListSection()),
                     ),
                   ),
                 ],
               ),
 
-              // 疊在右上角的小按鈕（只有展開狀態才出現）
+              // 輸入框位置 顯示邏輯
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: state.isKeyboardFloating ? MediaQuery.of(context).padding.bottom + 10 : 0,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: state.isKeyboardFloating ? Color(0xFFE6E6E6) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow:
+                        state.isKeyboardFloating
+                            ? [
+                              BoxShadow(
+                                color: Colors.black26, // 黑 26%（比 black12 更深一點）
+                                blurRadius: 120, // ✅ 模糊範圍擴大
+                                spreadRadius: 4, // ✅ 陰影範圍微微擴張
+                                offset: Offset(0, 4), // ✅ 陰影更往下飄)
+                              ),
+                            ]
+                            : null,
+                  ),
+                  child: SafeArea(child: MemoInputSection()),
+                ),
+              ),
+
+              // 右上角浮動按鈕（不變）
               if (state.isBottomExpanded)
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 2, right: 6),
                     child: Builder(
-                      // 加這個 Builder，才能使用到context
                       builder:
                           (context) => FloatingActionButton.small(
                             heroTag: 'menu',

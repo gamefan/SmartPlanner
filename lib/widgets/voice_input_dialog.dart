@@ -64,7 +64,7 @@ void showVoiceInputDialog(BuildContext context, {required Function(String text) 
                               await speechService.stopListening();
 
                               // 等待語音結果吐出來
-                              await Future.delayed(const Duration(milliseconds: 500));
+                              await Future.delayed(const Duration(milliseconds: 300));
 
                               if (hasSpoken && recognizedText.trim().isNotEmpty) {
                                 print('✅ 回傳最終文字：$recognizedText');
@@ -77,8 +77,9 @@ void showVoiceInputDialog(BuildContext context, {required Function(String text) 
                                   gravity: ToastGravity.BOTTOM,
                                 );
                               }
-
-                              Navigator.of(context).pop(); // 關閉視窗
+                              if (context.mounted) {
+                                Navigator.maybePop(context); // ✅ 使用 maybePop 避免錯誤
+                              }
                             },
                             child: Container(
                               width: 100,

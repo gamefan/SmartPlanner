@@ -56,6 +56,12 @@ class HomeViewModel extends StateNotifier<HomeState> {
     state = state.copyWith(isBottomExpanded: expanded);
   }
 
+  /// 設定鍵盤浮動狀態
+  void setKeyboardFloating(bool value) {
+    if (!mounted) return;
+    state = state.copyWith(isKeyboardFloating: value);
+  }
+
   /// 新增備註或待辦（實際送出）
   Future<void> submitMemo({
     required MemoType type,
@@ -112,21 +118,32 @@ class HomeState {
   /// 是否為下方滿版模式
   final bool isBottomExpanded;
 
+  /// 是否為鍵盤浮動模式
+  final bool isKeyboardFloating;
+
   /// 建構子
   HomeState({
     DateTime? selectedDate,
     this.inputText = '',
     this.speechStatus = SpeechStatus.idle,
     this.isBottomExpanded = false,
+    this.isKeyboardFloating = false,
   }) : selectedDate = selectedDate ?? DateTime.now();
 
   /// 複製當前狀態並更新部分屬性
-  HomeState copyWith({DateTime? selectedDate, String? inputText, SpeechStatus? speechStatus, bool? isBottomExpanded}) {
+  HomeState copyWith({
+    DateTime? selectedDate,
+    String? inputText,
+    SpeechStatus? speechStatus,
+    bool? isBottomExpanded,
+    bool? isKeyboardFloating,
+  }) {
     return HomeState(
       selectedDate: selectedDate ?? this.selectedDate,
       inputText: inputText ?? this.inputText,
       speechStatus: speechStatus ?? this.speechStatus,
       isBottomExpanded: isBottomExpanded ?? this.isBottomExpanded,
+      isKeyboardFloating: isKeyboardFloating ?? this.isKeyboardFloating,
     );
   }
 }
