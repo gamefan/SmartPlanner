@@ -100,17 +100,25 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
     );
   }
 
+  /// 提交備註或待辦
   Future<void> _handleSubmit() async {
     final viewModel = ref.read(homeViewModelProvider.notifier);
     final inputText = ref.read(homeViewModelProvider).inputText.trim();
 
     if (inputText.isEmpty) return;
 
-    final analysis = await MemoInputAnalyzer.analyze(inputText);
+    final selectedDate = ref.read(homeViewModelProvider).selectedDate;
+
+    final analysis = await MemoInputAnalyzer.analyze(inputText, selectedDate);
 
     final allTags = ref.read(hashtagProvider);
     final hashtagNotifier = ref.read(hashtagProvider.notifier);
     final tagIds = <String>[];
+
+    // 若 AI 沒給 targetTime 且是 todo，就 fallback 使用 rule-based 預設時間
+    final targetTime =
+        analysis.targetTime ??
+        (analysis.type == MemoType.todo ? selectedDate.toTargetTime(analysis.timeRangeType) : null);
 
     for (final tagName in analysis.hashtags) {
       final match = allTags.firstWhere((t) => t.name == tagName, orElse: () => Hashtag.empty());
@@ -125,7 +133,13 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
       }
     }
 
-    await viewModel.submitMemo(type: analysis.type, timeRangeType: analysis.timeRangeType, hashtags: tagIds);
+    // 提交備註或待辦
+    await viewModel.submitMemo(
+      type: analysis.type,
+      timeRangeType: analysis.timeRangeType,
+      hashtags: tagIds,
+      targetTime: targetTime,
+    );
 
     _focusNode.unfocus(); // ✅ 提交後自動取消焦點，關閉鍵盤
   }

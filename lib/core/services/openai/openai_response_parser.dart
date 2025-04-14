@@ -13,15 +13,33 @@ class OpenAiResponseParser {
   static AnalyzedMemoResult? parseMemoAnalysis(String jsonText) {
     try {
       final decoded = jsonDecode(jsonText);
+
+      // --- 基本欄位 ---
       final typeString = decoded['type'] as String?;
       final timeString = decoded['timeRangeType'] as String?;
       final rawTags = decoded['hashtags'] as List?;
-      final hashtags = rawTags?.map((e) => _tryRecoverUtf8(e.toString())).toList() ?? [];
+      final targetTimeStr = decoded['targetTime'] as String?;
 
       final type = _parseMemoType(typeString);
-      final time = _parseTimeRangeType(timeString);
+      final timeRange = _parseTimeRangeType(timeString);
+      final hashtags = rawTags?.map((e) => _tryRecoverUtf8(e.toString())).toList() ?? [];
 
-      return AnalyzedMemoResult(type: type, timeRangeType: time, hashtags: hashtags);
+      // --- targetTime 安全解析 ---
+      DateTime? targetTime;
+      if (type == MemoType.todo && targetTimeStr != null && targetTimeStr.trim().isNotEmpty) {
+        try {
+          targetTime = DateTime.parse(targetTimeStr);
+        } catch (_) {
+          targetTime = null; // ❌ 格式錯誤 → 視為無目標時間，由外部補上
+        }
+      }
+
+      // --- 若為 note，強制忽略 targetTime ---
+      if (type == MemoType.note) {
+        targetTime = null;
+      }
+
+      return AnalyzedMemoResult(type: type, timeRangeType: timeRange, hashtags: hashtags, targetTime: targetTime);
     } catch (e) {
       print('❌ GPT 回傳 JSON 解析失敗：$e');
       Fluttertoast.showToast(

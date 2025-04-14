@@ -67,6 +67,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
     required MemoType type,
     required TimeRangeType timeRangeType,
     List<String> hashtags = const [],
+    DateTime? targetTime,
   }) async {
     final wasExpanded = state.isBottomExpanded; // ✅ 儲存原本狀態
     final memo = MemoItem(
@@ -77,6 +78,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
       timeRangeType: type == MemoType.todo ? timeRangeType : TimeRangeType.none,
       isCompleted: type == MemoType.todo ? false : null,
       hashtags: hashtags,
+      targetTime: targetTime,
     );
 
     await ref.read(memoProvider.notifier).addMemo(memo);
