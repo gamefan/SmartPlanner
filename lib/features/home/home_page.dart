@@ -6,23 +6,28 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/features/home/widgets/memo_input_section.dart';
 import 'package:smartplanner/features/home/widgets/memo_list_section.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-/// 首頁畫面：整合月曆 + 輸入 + 清單功能
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+/// 首頁畫面：整合月曆 + 輸入 + 清單功能
+class _HomePageState extends ConsumerState<HomePage> {
+  double _lastOffset = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
     final viewModel = ref.read(homeViewModelProvider.notifier);
-
-    /// 根據鍵盤狀態決定是否顯示輸入框
-    final isFloating = state.isKeyboardFloating;
 
     return Scaffold(
       endDrawer: _buildDrawer(context),
@@ -43,96 +48,109 @@ class HomePage extends ConsumerWidget {
                 ],
               ),
       body: SafeArea(
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () {
-            FocusScope.of(context).unfocus(); // 點空白區自動取消輸入
-          },
-          onVerticalDragUpdate: (details) {
-            if (details.primaryDelta != null) {
-              if (details.primaryDelta! < -10) {
-                viewModel.setBottomExpanded(true); // 上滑展開下方
-              } else if (details.primaryDelta! > 10) {
-                viewModel.setBottomExpanded(false); // 下滑還原
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            // 垂直滑動才處理
+            if (notification is UserScrollNotification) {
+              final direction = notification.direction;
+              if (direction == ScrollDirection.forward) {
+                viewModel.setBottomExpanded(false);
+              } else if (direction == ScrollDirection.reverse) {
+                viewModel.setBottomExpanded(true);
               }
             }
+            return false; // 不阻止其他通知
           },
-          child: Stack(
-            fit: StackFit.expand, // 讓整個畫面能當作定位基準
-            children: [
-              Column(
-                children: [
-                  // 上方月曆區塊（你的原樣式）
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SizeTransition(sizeFactor: animation, axisAlignment: -1.0, child: child),
-                      );
-                    },
-                    child:
-                        state.isBottomExpanded
-                            ? Container(
-                              key: const ValueKey('collapsed'),
-                              height: 60,
-                              alignment: Alignment.center,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.chevron_left),
-                                    onPressed:
-                                        () =>
-                                            viewModel.selectDate(state.selectedDate.subtract(const Duration(days: 1))),
-                                  ),
-                                  Text(
-                                    '${state.selectedDate.year}/${state.selectedDate.month}/${state.selectedDate.day}',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.chevron_right),
-                                    onPressed:
-                                        () => viewModel.selectDate(state.selectedDate.add(const Duration(days: 1))),
-                                  ),
-                                ],
-                              ),
-                            )
-                            : Container(
-                              key: const ValueKey('expanded'),
-                              color: const Color(0xFFF8F9FA),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              child: TableCalendar(
-                                focusedDay: state.selectedDate,
-                                firstDay: DateTime(2020, 1, 1),
-                                lastDay: DateTime(2030, 12, 31),
-                                selectedDayPredicate: (day) => isSameDay(day, state.selectedDate),
-                                onDaySelected: (selected, focused) {
-                                  viewModel.selectDate(selected);
-                                },
-                                headerStyle: const HeaderStyle(
-                                  formatButtonVisible: false,
-                                  titleCentered: true,
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFFFEBEE),
-                                    borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-                                  ),
-                                  headerMargin: EdgeInsets.symmetric(vertical: 4),
-                                  headerPadding: EdgeInsets.symmetric(vertical: 2),
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              FocusScope.of(context).unfocus(); // 點空白區自動取消輸入
+            },
+            // onVerticalDragUpdate: (details) {
+            //   if (details.primaryDelta != null) {
+            //     if (details.primaryDelta! < -10) {
+            //       viewModel.setBottomExpanded(true); // 上滑展開下方
+            //     } else if (details.primaryDelta! > 10) {
+            //       viewModel.setBottomExpanded(false); // 下滑還原
+            //     }
+            //   }
+            // },
+            child: Stack(
+              fit: StackFit.expand, // 讓整個畫面能當作定位基準
+              children: [
+                ListView(
+                  children: [
+                    // 上方月曆區塊（你的原樣式）
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SizeTransition(sizeFactor: animation, axisAlignment: -1.0, child: child),
+                        );
+                      },
+                      child:
+                          state.isBottomExpanded
+                              ? Container(
+                                key: const ValueKey('collapsed'),
+                                height: 60,
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.chevron_left),
+                                      onPressed:
+                                          () => viewModel.selectDate(
+                                            state.selectedDate.subtract(const Duration(days: 1)),
+                                          ),
+                                    ),
+                                    Text(
+                                      '${state.selectedDate.year}/${state.selectedDate.month}/${state.selectedDate.day}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.chevron_right),
+                                      onPressed:
+                                          () => viewModel.selectDate(state.selectedDate.add(const Duration(days: 1))),
+                                    ),
+                                  ],
                                 ),
-                                calendarStyle: const CalendarStyle(
-                                  todayDecoration: BoxDecoration(color: Color(0xFFE0E0E0), shape: BoxShape.circle),
-                                  todayTextStyle: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
-                                  selectedDecoration: BoxDecoration(color: Color(0xFFBBDEFB), shape: BoxShape.circle),
-                                  selectedTextStyle: TextStyle(color: Color(0xFF212121), fontWeight: FontWeight.w500),
+                              )
+                              : Container(
+                                key: const ValueKey('expanded'),
+                                color: const Color(0xFFF8F9FA),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                child: TableCalendar(
+                                  focusedDay: state.selectedDate,
+                                  firstDay: DateTime(2020, 1, 1),
+                                  lastDay: DateTime(2030, 12, 31),
+                                  selectedDayPredicate: (day) => isSameDay(day, state.selectedDate),
+                                  onDaySelected: (selected, focused) {
+                                    viewModel.selectDate(selected);
+                                  },
+                                  headerStyle: const HeaderStyle(
+                                    formatButtonVisible: false,
+                                    titleCentered: true,
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFFFEBEE),
+                                      borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                                    ),
+                                    headerMargin: EdgeInsets.symmetric(vertical: 4),
+                                    headerPadding: EdgeInsets.symmetric(vertical: 2),
+                                  ),
+                                  calendarStyle: const CalendarStyle(
+                                    todayDecoration: BoxDecoration(color: Color(0xFFE0E0E0), shape: BoxShape.circle),
+                                    todayTextStyle: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+                                    selectedDecoration: BoxDecoration(color: Color(0xFFBBDEFB), shape: BoxShape.circle),
+                                    selectedTextStyle: TextStyle(color: Color(0xFF212121), fontWeight: FontWeight.w500),
+                                  ),
                                 ),
                               ),
-                            ),
-                  ),
+                    ),
 
-                  // 下方內容區
-                  Expanded(
-                    child: AnimatedContainer(
+                    // 下方內容區
+                    AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -144,54 +162,54 @@ class HomePage extends ConsumerWidget {
                       ),
                       child: const SingleChildScrollView(child: MemoListSection()),
                     ),
-                  ),
-                ],
-              ),
-
-              // 輸入框位置 顯示邏輯
-              Positioned(
-                left: 12,
-                right: 12,
-                bottom: state.isKeyboardFloating ? MediaQuery.of(context).padding.bottom + 10 : 0,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: state.isKeyboardFloating ? Color(0xFFE6E6E6) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow:
-                        state.isKeyboardFloating
-                            ? [
-                              BoxShadow(
-                                color: Colors.black26, // 黑 26%（比 black12 更深一點）
-                                blurRadius: 120, // ✅ 模糊範圍擴大
-                                spreadRadius: 4, // ✅ 陰影範圍微微擴張
-                                offset: Offset(0, 4), // ✅ 陰影更往下飄)
-                              ),
-                            ]
-                            : null,
-                  ),
-                  child: SafeArea(child: MemoInputSection()),
+                  ],
                 ),
-              ),
 
-              // 右上角浮動按鈕（不變）
-              if (state.isBottomExpanded)
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 2, right: 6),
-                    child: Builder(
-                      builder:
-                          (context) => FloatingActionButton.small(
-                            heroTag: 'menu',
-                            onPressed: () => Scaffold.of(context).openEndDrawer(),
-                            child: const Icon(Icons.menu),
-                          ),
+                // 輸入框位置 顯示邏輯
+                Positioned(
+                  left: 12,
+                  right: 12,
+                  bottom: state.isKeyboardFloating ? MediaQuery.of(context).padding.bottom + 10 : 0,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: state.isKeyboardFloating ? Color(0xFFE6E6E6) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow:
+                          state.isKeyboardFloating
+                              ? [
+                                BoxShadow(
+                                  color: Colors.black26, // 黑 26%（比 black12 更深一點）
+                                  blurRadius: 120, // ✅ 模糊範圍擴大
+                                  spreadRadius: 4, // ✅ 陰影範圍微微擴張
+                                  offset: Offset(0, 4), // ✅ 陰影更往下飄)
+                                ),
+                              ]
+                              : null,
+                    ),
+                    child: SafeArea(child: MemoInputSection()),
+                  ),
+                ),
+
+                // 右上角浮動按鈕（不變）
+                if (state.isBottomExpanded)
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 2, right: 6),
+                      child: Builder(
+                        builder:
+                            (context) => FloatingActionButton.small(
+                              heroTag: 'menu',
+                              onPressed: () => Scaffold.of(context).openEndDrawer(),
+                              child: const Icon(Icons.menu),
+                            ),
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
