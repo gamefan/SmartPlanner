@@ -199,11 +199,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
             // 通知功能測試
             const SizedBox(height: 20),
-            const Text('通知功能測試', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-
+            Row(
+              children: [
+                const Text('通知功能測試', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Icon(Icons.notifications),
+              ],
+            ),
             // 通知功能測試
             ListTile(
-              leading: const Icon(Icons.notifications),
               subtitle: Row(
                 children: [
                   TextButton(

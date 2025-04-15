@@ -55,7 +55,7 @@ void main() {
 
     test('submitMemo adds note and clears input', () async {
       viewModel.updateInput('這是一筆備註');
-      await viewModel.submitMemo(type: MemoType.note, timeRangeType: TimeRangeType.none);
+      await viewModel.submitMemo(type: MemoType.note, timeRangeType: TimeRangeType.none, content: '這是一筆備註');
 
       final notes = viewModel.notesForSelectedDate;
       expect(notes.length, 1);
@@ -66,7 +66,7 @@ void main() {
 
     test('submitMemo adds todo with correct type', () async {
       viewModel.updateInput('晚上去慢跑');
-      await viewModel.submitMemo(type: MemoType.todo, timeRangeType: TimeRangeType.evening);
+      await viewModel.submitMemo(type: MemoType.todo, timeRangeType: TimeRangeType.evening, content: '晚上去慢跑');
 
       final todos = viewModel.todosForSelectedDate;
       expect(todos.length, 1);

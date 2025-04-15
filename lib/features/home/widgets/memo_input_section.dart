@@ -139,7 +139,7 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
     final inputText = ref.read(homeViewModelProvider).inputText.trim();
 
     if (inputText.isEmpty) {
-      setState(() => _isLoading = false); // ⬅️ 防呆也加上還原
+      setState(() => _isLoading = false); // 還原狀態
       return;
     }
 
@@ -221,7 +221,7 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
       }
     }
 
-    // ✅ 傳入 notificationTime 與 notificationId
+    // 傳入 notificationTime 與 notificationId
     await viewModel.submitMemo(
       type: analysis.type,
       timeRangeType: analysis.timeRangeType,
@@ -242,7 +242,7 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
     final label = (analysis.type == MemoType.todo) ? "待辦事項" : "備註內容";
     final formatted = DateFormat('MM/dd').format(time);
 
-    final msg = "✅ 已新增 $label，記錄於 $formatted";
+    final msg = "已新增 $label，記錄於 $formatted";
     Fluttertoast.showToast(msg: msg, toastLength: Toast.LENGTH_SHORT, gravity: ToastGravity.BOTTOM);
   }
 }
