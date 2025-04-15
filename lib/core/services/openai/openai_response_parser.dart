@@ -19,6 +19,8 @@ class OpenAiResponseParser {
       final timeString = decoded['timeRangeType'] as String?;
       final rawTags = decoded['hashtags'] as List?;
       final targetTimeStr = decoded['targetTime'] as String?;
+      var adjustedContent = decoded['adjustedContent'] as String? ?? ''; // ✅ 確保不為 null
+      adjustedContent = _tryRecoverUtf8(adjustedContent.toString());
 
       final type = _parseMemoType(typeString);
       final timeRange = _parseTimeRangeType(timeString);
@@ -39,7 +41,13 @@ class OpenAiResponseParser {
         targetTime = null;
       }
 
-      return AnalyzedMemoResult(type: type, timeRangeType: timeRange, hashtags: hashtags, targetTime: targetTime);
+      return AnalyzedMemoResult(
+        type: type,
+        timeRangeType: timeRange,
+        hashtags: hashtags,
+        targetTime: targetTime,
+        adjustedContent: adjustedContent,
+      );
     } catch (e) {
       print('❌ GPT 回傳 JSON 解析失敗：$e');
       Fluttertoast.showToast(

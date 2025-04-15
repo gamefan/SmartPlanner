@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:collection/collection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:smartplanner/core/services/notification_service.dart';
+import 'package:smartplanner/core/services/openai/openai_assistant.dart';
 import 'package:smartplanner/core/services/storage_service.dart';
 import 'package:smartplanner/core/utils/util.dart';
 
@@ -85,6 +86,44 @@ class _SettingsPageState extends State<SettingsPage> {
               const Text('目前已儲存的 Key：'),
               Text('••••••••••••••••••', style: TextStyle(color: Colors.grey.shade600)),
             ],
+
+            //  建立 Assistant Thread
+            const SizedBox(height: 20),
+            const Text('Assistant Thread', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ListTile(
+              leading: const Icon(Icons.link),
+              title: FutureBuilder<String?>(
+                future: _storage.loadAssistantThreadId(),
+                builder: (context, snapshot) {
+                  final id = snapshot.data;
+                  return Text(
+                    id != null ? '目前 Assistant Thread ID：$id' : '尚未建立 Assistant Thread ID',
+                    style: const TextStyle(fontSize: 14),
+                  );
+                },
+              ),
+              subtitle: TextButton(
+                onPressed: () async {
+                  final apiKey = await _storage.loadApiKey();
+                  if (apiKey == null || apiKey.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ 尚未設定 API Key')));
+                    return;
+                  }
+                  final newId = await OpenAIAssistantService.createThread(apiKey);
+
+                  if (context.mounted) {
+                    if (newId != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ 已重建 Thread：$newId')));
+                      setState(() {}); // 更新 UI
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ 建立 Thread 失敗')));
+                    }
+                  }
+                },
+                child: const Text('重新建立 Thread'),
+              ),
+            ),
+
             // 通知時間設定
             const SizedBox(height: 20),
             const Text('通知時間範圍設定', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),

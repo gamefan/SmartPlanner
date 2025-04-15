@@ -55,4 +55,9 @@ extension CombineWithTimeRange on DateTime {
         return null;
     }
   }
+
+  /// 判斷是否為同一天
+  bool isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
 }

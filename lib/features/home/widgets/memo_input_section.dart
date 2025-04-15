@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 import 'package:smartplanner/core/services/input_analyzer/hashtag_input_analyzer.dart';
 import 'package:smartplanner/core/services/input_analyzer/memo_input_analyzer.dart';
 import 'package:smartplanner/core/services/notification_service.dart';
@@ -13,6 +14,7 @@ import 'package:smartplanner/models/hashtag.dart';
 
 import 'package:smartplanner/providers/hashtag_provider.dart';
 import 'package:smartplanner/widgets/voice_input_dialog.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 /// 頁面下方的輸入欄位區塊，支援文字與語音輸入
 class MemoInputSection extends ConsumerStatefulWidget {
@@ -168,6 +170,10 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
       }
     }
 
+    // 輸入內容的判斷，看使否要使用AI調整過的內容
+    final contentToUse =
+        (targetTime != null && !isSameDay(targetTime, selectedDate)) ? analysis.adjustedContent : inputText;
+
     // 通知相關資料
     DateTime? notificationTime;
     int? notificationId;
@@ -209,7 +215,7 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
         await NotificationService.scheduleNotification(
           id: notificationId,
           title: '待辦提醒',
-          body: inputText,
+          body: contentToUse,
           scheduledTime: notificationTime,
         );
       }
@@ -219,6 +225,7 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
     await viewModel.submitMemo(
       type: analysis.type,
       timeRangeType: analysis.timeRangeType,
+      content: contentToUse,
       hashtags: tagIds,
       targetTime: targetTime,
       notificationTime: notificationTime,
@@ -230,5 +237,12 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
 
     // 還原 loading 狀態
     setState(() => _isLoading = false);
+
+    final time = targetTime ?? selectedDate;
+    final label = (analysis.type == MemoType.todo) ? "待辦事項" : "備註內容";
+    final formatted = DateFormat('MM/dd').format(time);
+
+    final msg = "✅ 已新增 $label，記錄於 $formatted";
+    Fluttertoast.showToast(msg: msg, toastLength: Toast.LENGTH_SHORT, gravity: ToastGravity.BOTTOM);
   }
 }

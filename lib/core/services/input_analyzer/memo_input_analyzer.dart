@@ -12,24 +12,20 @@ class MemoInputAnalyzer {
   static Future<AnalyzedMemoResult> analyze(String input, DateTime selectedDate) async {
     try {
       final prompt = OpenAiPromptHelper.buildMemoAnalysisPrompt(input, selectedDate);
-      final response = await OpenAiService.sendPrompt(prompt: prompt);
+      final runId = await OpenAiService.sendToAssistant(message: prompt);
+      if (runId == null) throw Exception('Assistant 建立 Run 失敗');
 
-      if (response == null) {
-        throw Exception('GPT 回傳為空');
-      }
+      final resultText = await OpenAiService.pollRunAndGetResult(runId);
+      if (resultText == null) throw Exception('Assistant 回傳為空');
 
-      final result = OpenAiResponseParser.parseMemoAnalysis(response);
-
-      if (result == null) {
-        throw Exception('GPT 回傳格式錯誤');
-      }
+      final result = OpenAiResponseParser.parseMemoAnalysis(resultText);
+      if (result == null) throw Exception('Assistant 回傳格式錯誤');
 
       return result;
     } catch (e) {
-      print('❌ GPT 分析失敗：$e');
+      print('❌ Assistant 分析失敗：$e');
       Fluttertoast.showToast(msg: "AI 分析失敗 $e，改用預設規則判斷", toastLength: Toast.LENGTH_SHORT, gravity: ToastGravity.BOTTOM);
-      // 🔧 複製錯誤訊息到系統剪貼簿
-      await Clipboard.setData(ClipboardData(text: e.toString()));
+      await Clipboard.setData(ClipboardData(text: e.toString())); // 🔧 可複製錯誤訊息
       return ruleAnalyze(input, selectedDate); // fallback
     }
   }
@@ -59,6 +55,7 @@ class MemoInputAnalyzer {
       timeRangeType: timeType,
       hashtags: hashtags,
       targetTime: isTodo ? targetTime : null,
+      adjustedContent: input, // ruleAnalyze不改輸入
     );
   }
 
@@ -311,6 +308,13 @@ class AnalyzedMemoResult {
   final TimeRangeType timeRangeType;
   final List<String> hashtags;
   final DateTime? targetTime; // 目標時間（null 表示無具體時間）
+  final String adjustedContent; // 語意重寫後的句子內容
 
-  const AnalyzedMemoResult({required this.type, required this.timeRangeType, required this.hashtags, this.targetTime});
+  const AnalyzedMemoResult({
+    required this.type,
+    required this.timeRangeType,
+    required this.hashtags,
+    this.targetTime,
+    required this.adjustedContent,
+  });
 }

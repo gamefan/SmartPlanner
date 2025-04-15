@@ -13,6 +13,7 @@ import 'package:smartplanner/providers/memo_provider.dart';
 import 'package:smartplanner/models/memo_item.dart';
 import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/core/utils/util.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 /// HomeViewModel 用於管理首頁相關狀態與操作
 class HomeViewModel extends StateNotifier<HomeState> {
@@ -66,6 +67,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
   Future<void> submitMemo({
     required MemoType type,
     required TimeRangeType timeRangeType,
+    required String content, // 輸入內容
     List<String> hashtags = const [],
     DateTime? targetTime,
     DateTime? notificationTime, // 實際排定通知的時間
@@ -74,7 +76,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
     final wasExpanded = state.isBottomExpanded; // ✅ 儲存原本狀態
     final memo = MemoItem(
       id: generateId(),
-      content: state.inputText.trim(),
+      content: content.trim(),
       type: type,
       createdAt: state.selectedDate,
       timeRangeType: type == MemoType.todo ? timeRangeType : TimeRangeType.none,
@@ -102,11 +104,6 @@ class HomeViewModel extends StateNotifier<HomeState> {
   List<MemoItem> get todosForSelectedDate {
     final memos = ref.watch(memoProvider); // 改成 watch，會隨資料變化自動重建
     return memos.where((m) => m.type == MemoType.todo && isSameDay(m.createdAt, state.selectedDate)).toList();
-  }
-
-  /// 判斷是否為同一天
-  bool isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }
 

@@ -52,6 +52,18 @@ class StorageService {
     return prefs.getString(apiKey);
   }
 
+  // 儲存 Assistant Thread ID
+  Future<void> saveAssistantThreadId(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('assistant_thread_id', id);
+  }
+
+  // 讀取 Assistant Thread ID
+  Future<String?> loadAssistantThreadId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('assistant_thread_id');
+  }
+
   /// 儲存最早通知時間（預設為 8）
   Future<void> saveEarliestHour(int hour) async {
     final prefs = await SharedPreferences.getInstance();

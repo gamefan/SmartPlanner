@@ -28,7 +28,14 @@ class _MemoListSectionState extends ConsumerState<MemoListSection> {
       return a.year == b.year && a.month == b.month && a.day == b.day;
     }
 
-    final todos = memos.where((m) => m.type == MemoType.todo && isSameDay(m.createdAt, selectedDate)).toList();
+    // 改為使用目標日期優先判斷
+    final todos =
+        memos.where((m) {
+          if (m.type != MemoType.todo) return false;
+          final target = m.targetTime;
+          return isSameDay(target ?? m.createdAt, selectedDate);
+        }).toList();
+
     final notes = memos.where((m) => m.type == MemoType.note && isSameDay(m.createdAt, selectedDate)).toList();
 
     return Column(

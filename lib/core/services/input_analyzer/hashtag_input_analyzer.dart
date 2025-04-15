@@ -6,21 +6,23 @@ import 'package:smartplanner/core/services/openai/openai_service.dart';
 
 /// 分析單一 hashtag 的文字，推論其語意分類
 class HashtagInputAnalyzer {
+  /// AI 分析hashtag（GPT 回傳）
   static Future<HashtagCategory> analyzeCategory(String text) async {
     try {
       final prompt = OpenAiPromptHelper.buildHashtagCategoryPrompt(text);
-      final response = await OpenAiService.sendPrompt(prompt: prompt);
 
-      if (response == null) {
-        throw Exception('GPT 回傳為空');
-      }
+      final runId = await OpenAiService.sendToAssistant(message: prompt);
+      if (runId == null) throw Exception('Assistant 建立 Run 失敗');
 
-      final category = OpenAiResponseParser.parseHashtagCategory(response);
+      final resultText = await OpenAiService.pollRunAndGetResult(runId);
+      if (resultText == null) throw Exception('Assistant 回傳為空');
+
+      final category = OpenAiResponseParser.parseHashtagCategory(resultText);
       return category;
     } catch (e) {
-      print('❌ GPT 標籤分類失敗：$e');
+      print('❌ Assistant 標籤分類失敗：$e');
       Fluttertoast.showToast(msg: "AI 無法辨識分類，改用內建規則", toastLength: Toast.LENGTH_SHORT, gravity: ToastGravity.BOTTOM);
-      return ruleAnalyzeCategory(text);
+      return ruleAnalyzeCategory(text); // fallback rule-based
     }
   }
 
