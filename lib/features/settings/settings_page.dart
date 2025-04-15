@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:collection/collection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:smartplanner/core/services/notification_service.dart';
 import 'package:smartplanner/core/services/storage_service.dart';
@@ -213,6 +214,8 @@ class _SettingsPageState extends State<SettingsPage> {
               title: const Text('目前等待中的通知'),
               onTap: () async {
                 final pending = await NotificationService.getPendingNotifications();
+                final allMemos = await StorageService().loadMemos();
+
                 if (pending.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('📭 沒有等待中的通知')));
                 } else {
@@ -228,9 +231,20 @@ class _SettingsPageState extends State<SettingsPage> {
                               itemCount: pending.length,
                               itemBuilder: (context, index) {
                                 final p = pending[index];
+
+                                final matchedMemo = allMemos.firstWhereOrNull(
+                                  (m) =>
+                                      m.notificationId == p.id &&
+                                      m.notificationTime != null &&
+                                      m.notificationTime!.isAfter(DateTime.now()),
+                                );
+
+                                final displayTime =
+                                    matchedMemo?.notificationTime?.toLocal().toString().substring(0, 16) ?? '未知時間';
+
                                 return ListTile(
                                   title: Text(p.title ?? '（無標題）'),
-                                  subtitle: Text('ID: ${p.id}｜內容：${p.body ?? '（無內容）'}'),
+                                  subtitle: Text('ID: ${p.id}｜內容：${p.body ?? '（無內容）'}\n通知時間：$displayTime'),
                                 );
                               },
                             ),

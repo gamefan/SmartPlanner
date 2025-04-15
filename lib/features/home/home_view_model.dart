@@ -68,6 +68,8 @@ class HomeViewModel extends StateNotifier<HomeState> {
     required TimeRangeType timeRangeType,
     List<String> hashtags = const [],
     DateTime? targetTime,
+    DateTime? notificationTime, // 實際排定通知的時間
+    int? notificationId, // 通知 ID 對應 flutter_local_notifications
   }) async {
     final wasExpanded = state.isBottomExpanded; // ✅ 儲存原本狀態
     final memo = MemoItem(
@@ -79,6 +81,8 @@ class HomeViewModel extends StateNotifier<HomeState> {
       isCompleted: type == MemoType.todo ? false : null,
       hashtags: hashtags,
       targetTime: targetTime,
+      notificationTime: notificationTime,
+      notificationId: notificationId,
     );
 
     await ref.read(memoProvider.notifier).addMemo(memo);

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smartplanner/core/services/notification_service.dart';
 import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/models/memo_item.dart';
 import 'package:smartplanner/core/services/storage_service.dart';
@@ -23,6 +24,13 @@ class MemoNotifier extends StateNotifier<List<MemoItem>> {
 
   /// 根據 ID 刪除一筆項目（備註或待辦）
   Future<void> deleteMemo(String id) async {
+    final target = state.where((item) => item.id == id).cast<MemoItem?>().firstOrNull;
+
+    // 若該筆有通知 ID，取消通知
+    if (target?.notificationId != null) {
+      await NotificationService.cancelNotification(target!.notificationId!);
+    }
+
     state = state.where((item) => item.id != id).toList();
     await storage.saveMemos(state);
   }

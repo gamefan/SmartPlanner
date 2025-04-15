@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartplanner/core/services/input_analyzer/hashtag_input_analyzer.dart';
 import 'package:smartplanner/core/services/input_analyzer/memo_input_analyzer.dart';
+import 'package:smartplanner/core/services/notification_service.dart';
 import 'package:smartplanner/core/services/speech_input_service.dart';
+import 'package:smartplanner/core/services/storage_service.dart';
 import 'package:smartplanner/core/utils/util.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/models/enum.dart';
@@ -102,13 +105,22 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
 
   /// 提交備註或待辦
   Future<void> _handleSubmit() async {
+    /*
+        AI + fallback 的語意分析
+        自動產生與分類 hashtag
+        自動推斷 targetTime
+        自動根據設定建立 notificationTime
+        比對現有通知 ID，避免重複
+        呼叫 NotificationService.scheduleNotification
+        傳入 notificationTime 與 notificationId 給 submitMemo
+    */
+
     final viewModel = ref.read(homeViewModelProvider.notifier);
     final inputText = ref.read(homeViewModelProvider).inputText.trim();
 
     if (inputText.isEmpty) return;
 
     final selectedDate = ref.read(homeViewModelProvider).selectedDate;
-
     final analysis = await MemoInputAnalyzer.analyze(inputText, selectedDate);
 
     final allTags = ref.read(hashtagProvider);
@@ -120,12 +132,14 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
         analysis.targetTime ??
         (analysis.type == MemoType.todo ? selectedDate.toTargetTime(analysis.timeRangeType) : null);
 
+    // hashtag 生成與分類
     for (final tagName in analysis.hashtags) {
       final match = allTags.firstWhere((t) => t.name == tagName, orElse: () => Hashtag.empty());
-
+      // 如果 tagName 已存在，則直接使用其 ID
       if (match.id.isNotEmpty) {
         tagIds.add(match.id);
       } else {
+        // 如果 tagName 不存在，則使用 AI 生成的分類
         final category = await HashtagInputAnalyzer.analyzeCategory(tagName);
         final newTag = Hashtag(id: generateId(), name: tagName, source: HashtagSource.aiGenerated, category: category);
         hashtagNotifier.addHashtag(newTag);
@@ -133,14 +147,64 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
       }
     }
 
-    // 提交備註或待辦
+    // 通知相關資料
+    DateTime? notificationTime;
+    int? notificationId;
+
+    // 🔔 建立通知判斷條件
+    if (analysis.type == MemoType.todo && targetTime != null && targetTime.isAfter(DateTime.now())) {
+      final storage = StorageService();
+      final earliest = await storage.loadEarliestHour() ?? 8;
+      final latest = await storage.loadLatestHour() ?? 22;
+      final behavior = await storage.loadOutOfRangeBehavior() ?? 'skip';
+
+      // 設定通知時間
+      // 如果時間在最早與最晚之間，則使用 targetTime
+      // 調整模式(adjust)如果時間在最早之前，則調整為最早時間，如果時間在最晚之後，則使用最晚時間
+      // skip 模式則不建立通知
+      final hour = targetTime.hour;
+      if (hour < earliest && behavior == 'adjust') {
+        notificationTime = DateTime(targetTime.year, targetTime.month, targetTime.day, earliest);
+      } else if (hour > latest && behavior == 'adjust') {
+        notificationTime = DateTime(targetTime.year, targetTime.month, targetTime.day, latest);
+      } else if (hour < earliest || hour > latest) {
+        notificationTime = null; // skip 建立
+      } else {
+        notificationTime = targetTime;
+      }
+
+      // 🔁 避免 ID 重複
+      if (notificationTime != null) {
+        final pending = await NotificationService.getPendingNotifications();
+        final usedIds = pending.map((p) => p.id).toSet();
+
+        int newId = DateTime.now().millisecondsSinceEpoch.remainder(1000000);
+        while (usedIds.contains(newId)) {
+          newId = (newId + 1) % 1000000;
+        }
+
+        notificationId = newId;
+
+        await NotificationService.scheduleNotification(
+          id: notificationId,
+          title: '待辦提醒',
+          body: inputText,
+          scheduledTime: notificationTime,
+        );
+      }
+    }
+
+    // ✅ 傳入 notificationTime 與 notificationId
     await viewModel.submitMemo(
       type: analysis.type,
       timeRangeType: analysis.timeRangeType,
       hashtags: tagIds,
       targetTime: targetTime,
+      notificationTime: notificationTime,
+      notificationId: notificationId,
     );
 
-    _focusNode.unfocus(); // ✅ 提交後自動取消焦點，關閉鍵盤
+    // 清空輸入欄位
+    _focusNode.unfocus();
   }
 }
