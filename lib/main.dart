@@ -5,6 +5,8 @@
  */
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:smartplanner/core/services/notification_service.dart';
 import 'package:smartplanner/features/hashtags/hashtag_manager_page.dart';
 import 'package:smartplanner/features/home/home_page.dart';
 import 'package:smartplanner/features/memo/all_memo_page.dart';
@@ -12,8 +14,18 @@ import 'package:smartplanner/features/settings/settings_page.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
 
 /// App 入口點
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.initialize(); // ✅ 初始化通知
+  await requestNotificationPermission(); // ✅ 請求通知權限
   runApp(const ProviderScope(child: MyApp()));
+}
+
+/// 請求通知權限
+Future<void> requestNotificationPermission() async {
+  if (await Permission.notification.isDenied) {
+    await Permission.notification.request();
+  }
 }
 
 /// 應用程式根元件

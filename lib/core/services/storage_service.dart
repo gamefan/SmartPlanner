@@ -51,4 +51,40 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(apiKey);
   }
+
+  /// 儲存最早通知時間（預設為 8）
+  Future<void> saveEarliestHour(int hour) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('earliest_notification_hour', hour);
+  }
+
+  /// 讀取最早通知時間（若無則回傳 null）
+  Future<int?> loadEarliestHour() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('earliest_notification_hour');
+  }
+
+  /// 儲存最晚通知時間（預設為 22）
+  Future<void> saveLatestHour(int hour) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('latest_notification_hour', hour);
+  }
+
+  /// 讀取最晚通知時間
+  Future<int?> loadLatestHour() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('latest_notification_hour');
+  }
+
+  /// 儲存「時間超出範圍」時的處理方式（skip 或 adjust）
+  Future<void> saveOutOfRangeBehavior(String behavior) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('notification_out_of_range_behavior', behavior);
+  }
+
+  /// 讀取「時間超出範圍」處理方式
+  Future<String?> loadOutOfRangeBehavior() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('notification_out_of_range_behavior');
+  }
 }

@@ -1,5 +1,17 @@
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:uuid/uuid.dart';
 import 'package:smartplanner/models/enum.dart';
+
+import 'dart:io';
+import 'package:flutter/material.dart';
+
+/// 請求通知權限
+Future<void> openExactAlarmSettings() async {
+  if (Platform.isAndroid) {
+    const intent = AndroidIntent(action: 'android.settings.REQUEST_SCHEDULE_EXACT_ALARM');
+    await intent.launch();
+  }
+}
 
 final _uuid = Uuid();
 

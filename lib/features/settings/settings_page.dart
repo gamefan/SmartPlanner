@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:smartplanner/core/services/notification_service.dart';
 import 'package:smartplanner/core/services/storage_service.dart';
+import 'package:smartplanner/core/utils/util.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -15,12 +19,18 @@ class _SettingsPageState extends State<SettingsPage> {
   String? _savedKey;
   bool _isSaving = false;
 
+  int _earliestHour = 8;
+  int _latestHour = 22;
+  String _outOfRangeBehavior = 'skip';
+
   @override
   void initState() {
     super.initState();
     _loadSavedKey();
+    _loadNotificationSettings();
   }
 
+  /// 載入 API Key
   Future<void> _loadSavedKey() async {
     final saved = await _storage.loadApiKey();
     setState(() {
@@ -29,6 +39,7 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  /// 儲存 API Key
   Future<void> _saveKey() async {
     setState(() => _isSaving = true);
     await _storage.saveApiKey(_controller.text.trim());
@@ -38,15 +49,24 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  /// 初始 通知時間相關設定
+  Future<void> _loadNotificationSettings() async {
+    _earliestHour = await _storage.loadEarliestHour() ?? 8;
+    _latestHour = await _storage.loadLatestHour() ?? 22;
+    _outOfRangeBehavior = await _storage.loadOutOfRangeBehavior() ?? 'skip';
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('設定')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: ListView(
           children: [
-            const Text('輸入 OpenAI API Key'),
+            // API Key 設定
+            const Text('OpenAI API Key設定', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             TextField(
               controller: _controller,
@@ -64,6 +84,163 @@ class _SettingsPageState extends State<SettingsPage> {
               const Text('目前已儲存的 Key：'),
               Text('••••••••••••••••••', style: TextStyle(color: Colors.grey.shade600)),
             ],
+            // 通知時間設定
+            const SizedBox(height: 20),
+            const Text('通知時間範圍設定', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Text('最早通知時間：'),
+                const SizedBox(width: 8),
+                DropdownButton<int>(
+                  value: _earliestHour,
+                  items: List.generate(24, (index) {
+                    return DropdownMenuItem(value: index, child: Text('$index:00'));
+                  }),
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await _storage.saveEarliestHour(value);
+                      setState(() => _earliestHour = value);
+                    }
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Text('最晚通知時間：'),
+                const SizedBox(width: 8),
+                DropdownButton<int>(
+                  value: _latestHour,
+                  items: List.generate(24, (index) {
+                    return DropdownMenuItem(value: index, child: Text('$index:00'));
+                  }),
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await _storage.saveLatestHour(value);
+                      setState(() => _latestHour = value);
+                    }
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+            const Text('超出範圍處理方式：'),
+            RadioListTile<String>(
+              title: const Text('不建立通知'),
+              value: 'skip',
+              groupValue: _outOfRangeBehavior,
+              onChanged: (value) async {
+                if (value != null) {
+                  await _storage.saveOutOfRangeBehavior(value);
+                  setState(() => _outOfRangeBehavior = value);
+                }
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            RadioListTile<String>(
+              title: const Text('調整為最早／最晚'),
+              value: 'adjust',
+              groupValue: _outOfRangeBehavior,
+              onChanged: (value) async {
+                if (value != null) {
+                  await _storage.saveOutOfRangeBehavior(value);
+                  setState(() => _outOfRangeBehavior = value);
+                }
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            // 通知功能測試
+            const SizedBox(height: 20),
+            const Text('通知功能測試', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+
+            // 通知功能測試
+            ListTile(
+              leading: const Icon(Icons.notifications),
+              subtitle: Row(
+                children: [
+                  TextButton(
+                    onPressed: () async {
+                      try {
+                        final testTime = DateTime.now().add(const Duration(seconds: 5));
+                        await NotificationService.scheduleNotification(
+                          id: 999,
+                          title: '測試通知',
+                          body: '這是一筆 10 秒後的測試通知',
+                          scheduledTime: testTime,
+                        );
+
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('測試訊息 (10 秒後 通知）')));
+                      } catch (e, stack) {
+                        print('❌ 通知建立失敗：$e');
+                        print(stack);
+                        // 在 catch 區塊中加上這行，複製錯誤訊息
+                        await Clipboard.setData(ClipboardData(text: e.toString()));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ 建立通知失敗：$e')));
+                      }
+                    },
+                    child: const Text('測試通知'),
+                  ),
+
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () async {
+                      final status = await Permission.notification.status;
+                      if (status.isDenied || status.isPermanentlyDenied) {
+                        final result = await Permission.notification.request();
+                        final msg = result.isGranted ? '✅ 通知權限已授權' : '❌ 通知權限被拒絕';
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🔔 通知權限已存在')));
+                      }
+                    },
+                    child: const Text('請求權限'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(onPressed: openExactAlarmSettings, child: const Text('精確權限')),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.list),
+              title: const Text('目前等待中的通知'),
+              onTap: () async {
+                final pending = await NotificationService.getPendingNotifications();
+                if (pending.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('📭 沒有等待中的通知')));
+                } else {
+                  showDialog(
+                    context: context,
+                    builder:
+                        (_) => AlertDialog(
+                          title: const Text('等待中的通知'),
+                          content: SizedBox(
+                            width: double.maxFinite,
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: pending.length,
+                              itemBuilder: (context, index) {
+                                final p = pending[index];
+                                return ListTile(
+                                  title: Text(p.title ?? '（無標題）'),
+                                  subtitle: Text('ID: ${p.id}｜內容：${p.body ?? '（無內容）'}'),
+                                );
+                              },
+                            ),
+                          ),
+                          actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('關閉'))],
+                        ),
+                  );
+                }
+              },
+            ),
           ],
         ),
       ),

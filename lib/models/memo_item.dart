@@ -28,6 +28,12 @@ class MemoItem {
   /// 所屬時間區段分類（預設 none）
   final TimeRangeType timeRangeType;
 
+  /// 實際排定的通知時間
+  final DateTime? notificationTime;
+
+  /// 對應 flutter_local_notifications 的 ID
+  final int? notificationId;
+
   /// 建構函式
   MemoItem({
     required this.id,
@@ -38,6 +44,8 @@ class MemoItem {
     this.isCompleted,
     this.hashtags = const [],
     this.timeRangeType = TimeRangeType.none,
+    this.notificationTime,
+    this.notificationId,
   });
 
   /// 工具函式：是否為全日待辦（type = todo 且 targetTime 為 null）
@@ -56,6 +64,8 @@ class MemoItem {
     bool? isCompleted,
     List<String>? hashtags,
     TimeRangeType? timeRangeType,
+    DateTime? notificationTime,
+    int? notificationId,
   }) {
     return MemoItem(
       id: id ?? this.id,
@@ -66,6 +76,8 @@ class MemoItem {
       isCompleted: isCompleted ?? this.isCompleted,
       hashtags: hashtags ?? this.hashtags,
       timeRangeType: timeRangeType ?? this.timeRangeType,
+      notificationTime: notificationTime ?? this.notificationTime,
+      notificationId: notificationId ?? this.notificationId,
     );
   }
 
@@ -80,6 +92,8 @@ class MemoItem {
       'isCompleted': isCompleted,
       'hashtags': hashtags,
       'timeRangeType': timeRangeType.name,
+      'notificationTime': notificationTime?.toIso8601String(),
+      'notificationId': notificationId,
     };
   }
 
@@ -94,6 +108,8 @@ class MemoItem {
       isCompleted: json['isCompleted'],
       hashtags: List<String>.from(json['hashtags']),
       timeRangeType: TimeRangeType.values.byName(json['timeRangeType']),
+      notificationTime: json['notificationTime'] != null ? DateTime.parse(json['notificationTime']) : null,
+      notificationId: json['notificationId'] != null ? json['notificationId'] as int : null,
     );
   }
 }
