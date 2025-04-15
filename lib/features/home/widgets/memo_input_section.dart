@@ -25,6 +25,7 @@ class MemoInputSection extends ConsumerStatefulWidget {
 class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
   final _speechService = SpeechInputService();
   late final FocusNode _focusNode;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -54,6 +55,20 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
 
   @override
   Widget build(BuildContext context) {
+    // AI 分析中的 loading 狀態
+    if (_isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 12),
+            Text('AI 分析中…請稍候', style: TextStyle(fontSize: 16)),
+          ],
+        ),
+      );
+    }
+
     final viewModel = ref.read(homeViewModelProvider.notifier);
     final inputText = ref.watch(homeViewModelProvider).inputText;
     final isFloating = ref.watch(homeViewModelProvider).isKeyboardFloating;
@@ -115,10 +130,16 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
         傳入 notificationTime 與 notificationId 給 submitMemo
     */
 
+    // 變更 loading 狀態
+    setState(() => _isLoading = true);
+
     final viewModel = ref.read(homeViewModelProvider.notifier);
     final inputText = ref.read(homeViewModelProvider).inputText.trim();
 
-    if (inputText.isEmpty) return;
+    if (inputText.isEmpty) {
+      setState(() => _isLoading = false); // ⬅️ 防呆也加上還原
+      return;
+    }
 
     final selectedDate = ref.read(homeViewModelProvider).selectedDate;
     final analysis = await MemoInputAnalyzer.analyze(inputText, selectedDate);
@@ -206,5 +227,8 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
 
     // 清空輸入欄位
     _focusNode.unfocus();
+
+    // 還原 loading 狀態
+    setState(() => _isLoading = false);
   }
 }
