@@ -22,8 +22,6 @@ class HomePage extends ConsumerStatefulWidget {
 
 /// 首頁畫面：整合月曆 + 輸入 + 清單功能
 class _HomePageState extends ConsumerState<HomePage> {
-  double _lastOffset = 0;
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
@@ -31,22 +29,33 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       endDrawer: _buildDrawer(context),
-      appBar:
-          state.isBottomExpanded
-              ? null
-              : AppBar(
-                title: const Text('Smart Planner'),
-                centerTitle: true,
-                actions: [
-                  Builder(
-                    builder:
-                        (context) => IconButton(
-                          icon: const Icon(Icons.menu),
-                          onPressed: () => Scaffold.of(context).openEndDrawer(),
-                        ),
-                  ),
-                ],
-              ),
+      appBar: AppBar(
+        title:
+            state.isBottomExpanded
+                ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: () => viewModel.selectDate(state.selectedDate.subtract(const Duration(days: 1))),
+                    ),
+                    Text('${state.selectedDate.year}/${state.selectedDate.month}/${state.selectedDate.day}'),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: () => viewModel.selectDate(state.selectedDate.add(const Duration(days: 1))),
+                    ),
+                  ],
+                )
+                : const Text('Smart Planner'),
+        centerTitle: true,
+        actions: [
+          Builder(
+            builder:
+                (context) =>
+                    IconButton(icon: const Icon(Icons.menu), onPressed: () => Scaffold.of(context).openEndDrawer()),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: NotificationListener<ScrollNotification>(
           onNotification: (notification) {
@@ -66,103 +75,81 @@ class _HomePageState extends ConsumerState<HomePage> {
             onTap: () {
               FocusScope.of(context).unfocus(); // 點空白區自動取消輸入
             },
-            // onVerticalDragUpdate: (details) {
-            //   if (details.primaryDelta != null) {
-            //     if (details.primaryDelta! < -10) {
-            //       viewModel.setBottomExpanded(true); // 上滑展開下方
-            //     } else if (details.primaryDelta! > 10) {
-            //       viewModel.setBottomExpanded(false); // 下滑還原
-            //     }
-            //   }
-            // },
             child: Stack(
               fit: StackFit.expand, // 讓整個畫面能當作定位基準
               children: [
-                ListView(
-                  children: [
-                    // 上方月曆區塊（你的原樣式）
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: SizeTransition(sizeFactor: animation, axisAlignment: -1.0, child: child),
-                        );
-                      },
-                      child:
-                          state.isBottomExpanded
-                              ? Container(
-                                key: const ValueKey('collapsed'),
-                                height: 60,
-                                alignment: Alignment.center,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.chevron_left),
-                                      onPressed:
-                                          () => viewModel.selectDate(
-                                            state.selectedDate.subtract(const Duration(days: 1)),
-                                          ),
-                                    ),
-                                    Text(
-                                      '${state.selectedDate.year}/${state.selectedDate.month}/${state.selectedDate.day}',
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.chevron_right),
-                                      onPressed:
-                                          () => viewModel.selectDate(state.selectedDate.add(const Duration(days: 1))),
-                                    ),
-                                  ],
-                                ),
-                              )
-                              : Container(
-                                key: const ValueKey('expanded'),
-                                color: const Color(0xFFF8F9FA),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                child: TableCalendar(
-                                  focusedDay: state.selectedDate,
-                                  firstDay: DateTime(2020, 1, 1),
-                                  lastDay: DateTime(2030, 12, 31),
-                                  selectedDayPredicate: (day) => isSameDay(day, state.selectedDate),
-                                  onDaySelected: (selected, focused) {
-                                    viewModel.selectDate(selected);
-                                  },
-                                  headerStyle: const HeaderStyle(
-                                    formatButtonVisible: false,
-                                    titleCentered: true,
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFFFEBEE),
-                                      borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-                                    ),
-                                    headerMargin: EdgeInsets.symmetric(vertical: 4),
-                                    headerPadding: EdgeInsets.symmetric(vertical: 2),
-                                  ),
-                                  calendarStyle: const CalendarStyle(
-                                    todayDecoration: BoxDecoration(color: Color(0xFFE0E0E0), shape: BoxShape.circle),
-                                    todayTextStyle: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
-                                    selectedDecoration: BoxDecoration(color: Color(0xFFBBDEFB), shape: BoxShape.circle),
-                                    selectedTextStyle: TextStyle(color: Color(0xFF212121), fontWeight: FontWeight.w500),
-                                  ),
-                                ),
-                              ),
-                    ),
-
-                    // 下方內容區
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius:
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 80, // 預留輸入框空間
+                  child: ListView(
+                    children: [
+                      // 上方月曆區塊（你的原樣式）
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SizeTransition(sizeFactor: animation, axisAlignment: -1.0, child: child),
+                          );
+                        },
+                        child:
                             state.isBottomExpanded
-                                ? const BorderRadius.vertical(top: Radius.circular(16))
-                                : BorderRadius.zero,
+                                ? null
+                                : Container(
+                                  key: const ValueKey('expanded'),
+                                  color: const Color(0xFFF8F9FA),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  child: TableCalendar(
+                                    focusedDay: state.selectedDate,
+                                    firstDay: DateTime(2020, 1, 1),
+                                    lastDay: DateTime(2030, 12, 31),
+                                    selectedDayPredicate: (day) => isSameDay(day, state.selectedDate),
+                                    onDaySelected: (selected, focused) {
+                                      viewModel.selectDate(selected);
+                                    },
+                                    headerStyle: const HeaderStyle(
+                                      formatButtonVisible: false,
+                                      titleCentered: true,
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFFFEBEE),
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                                      ),
+                                      headerMargin: EdgeInsets.symmetric(vertical: 4),
+                                      headerPadding: EdgeInsets.symmetric(vertical: 2),
+                                    ),
+                                    calendarStyle: const CalendarStyle(
+                                      todayDecoration: BoxDecoration(color: Color(0xFFE0E0E0), shape: BoxShape.circle),
+                                      todayTextStyle: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+                                      selectedDecoration: BoxDecoration(
+                                        color: Color(0xFFBBDEFB),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      selectedTextStyle: TextStyle(
+                                        color: Color(0xFF212121),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                       ),
-                      child: const SingleChildScrollView(child: MemoListSection()),
-                    ),
-                  ],
+
+                      // 下方內容區
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius:
+                              state.isBottomExpanded
+                                  ? const BorderRadius.vertical(top: Radius.circular(16))
+                                  : BorderRadius.zero,
+                        ),
+                        child: const SingleChildScrollView(child: MemoListSection()),
+                      ),
+                    ],
+                  ),
                 ),
 
                 // 輸入框位置 顯示邏輯
@@ -192,22 +179,23 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
 
-                // 右上角浮動按鈕（不變）
-                if (state.isBottomExpanded)
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 2, right: 6),
-                      child: Builder(
-                        builder:
-                            (context) => FloatingActionButton.small(
-                              heroTag: 'menu',
-                              onPressed: () => Scaffold.of(context).openEndDrawer(),
-                              child: const Icon(Icons.menu),
-                            ),
-                      ),
-                    ),
-                  ),
+                // 調整版面設計後，暫時不用，先保留看是否還有其他地方能使用
+                // // 右上角浮動按鈕（不變）
+                // if (state.isBottomExpanded)
+                //   Align(
+                //     alignment: Alignment.topRight,
+                //     child: Padding(
+                //       padding: const EdgeInsets.only(top: 2, right: 6),
+                //       child: Builder(
+                //         builder:
+                //             (context) => FloatingActionButton.small(
+                //               heroTag: 'menu',
+                //               onPressed: () => Scaffold.of(context).openEndDrawer(),
+                //               child: const Icon(Icons.menu),
+                //             ),
+                //       ),
+                //     ),
+                //   ),
               ],
             ),
           ),

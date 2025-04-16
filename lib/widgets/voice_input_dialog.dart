@@ -6,12 +6,12 @@ void showVoiceInputDialog(BuildContext context, {required Function(String text) 
   final speechService = SpeechInputService();
   String recognizedText = '';
   bool hasSpoken = false;
-  bool isRecording = false; // ✅ 提出來避免 dead code 判斷錯誤
+  bool isRecording = false; // 提出來避免 dead code 判斷錯誤
 
   showDialog(
     context: context,
     barrierDismissible: true,
-    barrierColor: const Color(0x88000000), // ✅ 改為準確透明黑色
+    barrierColor: const Color(0x88000000), // 透明黑色
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setState) {
@@ -38,9 +38,18 @@ void showVoiceInputDialog(BuildContext context, {required Function(String text) 
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (isRecording) ...[
-                            const Text('🎤 正在錄音中，請說話⋯⋯', style: TextStyle(color: Colors.white, fontSize: 16)),
-                            const SizedBox(height: 12),
-                            const _RecordingIndicator(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text('🎤 正在錄音中，請說話⋯⋯', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                const SizedBox(width: 12),
+                                const _RecordingIndicator(),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                          if (!isRecording) ...[
+                            const Text('請按住麥克風開始錄音', style: TextStyle(color: Colors.white70, fontSize: 16)),
                             const SizedBox(height: 20),
                           ],
                           Listener(
@@ -48,7 +57,7 @@ void showVoiceInputDialog(BuildContext context, {required Function(String text) 
                               print('🎤 開始初始化錄音...');
                               setState(() => isRecording = true);
                               await speechService.init();
-                              print('✅ 語音服務初始化完成');
+                              print('語音服務初始化完成');
                               await speechService.startListening(
                                 onResult: (text) {
                                   print('📝 辨識文字結果：$text');
@@ -67,7 +76,7 @@ void showVoiceInputDialog(BuildContext context, {required Function(String text) 
                               await Future.delayed(const Duration(milliseconds: 300));
 
                               if (hasSpoken && recognizedText.trim().isNotEmpty) {
-                                print('✅ 回傳最終文字：$recognizedText');
+                                print('回傳最終文字：$recognizedText');
                                 onResult(recognizedText.trim());
                               } else {
                                 print('⚠️ 沒有辨識到任何語音輸入');
@@ -78,7 +87,7 @@ void showVoiceInputDialog(BuildContext context, {required Function(String text) 
                                 );
                               }
                               if (context.mounted) {
-                                Navigator.maybePop(context); // ✅ 使用 maybePop 避免錯誤
+                                Navigator.maybePop(context); // 使用 maybePop 避免錯誤
                               }
                             },
                             child: Container(

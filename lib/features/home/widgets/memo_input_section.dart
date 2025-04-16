@@ -27,6 +27,7 @@ class MemoInputSection extends ConsumerStatefulWidget {
 class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
   final _speechService = SpeechInputService();
   late final FocusNode _focusNode;
+  late final TextEditingController _controller;
   bool _isLoading = false;
 
   @override
@@ -38,11 +39,15 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
     _focusNode.addListener(() {
       _updateFloatingState();
     });
+
+    _controller = TextEditingController();
+    _controller.text = ref.read(homeViewModelProvider).inputText;
   }
 
   @override
   void dispose() {
     _focusNode.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -102,14 +107,13 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
           Expanded(
             child: TextField(
               focusNode: _focusNode,
+              controller: _controller,
               decoration: const InputDecoration(
                 hintText: '輸入備註或待辦內容',
                 border: OutlineInputBorder(),
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              controller: TextEditingController(text: inputText)
-                ..selection = TextSelection.collapsed(offset: inputText.length),
               onChanged: viewModel.updateInput,
               onSubmitted: (_) => _handleSubmit(),
             ),
@@ -233,7 +237,9 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
     );
 
     // 清空輸入欄位
+    _controller.clear();
     _focusNode.unfocus();
+    viewModel.updateInput('');
 
     // 還原 loading 狀態
     setState(() => _isLoading = false);
