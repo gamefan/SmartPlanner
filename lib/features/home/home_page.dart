@@ -30,6 +30,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       endDrawer: _buildDrawer(context),
       appBar: AppBar(
+        toolbarHeight: 45,
         title:
             state.isBottomExpanded
                 ? Row(
@@ -100,14 +101,25 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 : Container(
                                   key: const ValueKey('expanded'),
                                   color: const Color(0xFFF8F9FA),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  padding: EdgeInsets.fromLTRB(12, 0, 12, 12), // ✅ 上方設為 0
                                   child: TableCalendar(
+                                    daysOfWeekHeight: 24, // 調整星期高度
                                     focusedDay: state.selectedDate,
                                     firstDay: DateTime(2020, 1, 1),
                                     lastDay: DateTime(2030, 12, 31),
                                     selectedDayPredicate: (day) => isSameDay(day, state.selectedDate),
                                     onDaySelected: (selected, focused) {
                                       viewModel.selectDate(selected);
+                                    },
+                                    onPageChanged: (focusedDay) {
+                                      final now = DateTime.now();
+                                      if (focusedDay.year == now.year && focusedDay.month == now.month) {
+                                        // 若回到當前月份，自動改為今天
+                                        viewModel.selectDate(now);
+                                      } else {
+                                        // 切到其他月份，預設為該月第一天
+                                        viewModel.selectDate(DateTime(focusedDay.year, focusedDay.month, 1));
+                                      }
                                     },
                                     headerStyle: const HeaderStyle(
                                       formatButtonVisible: false,
@@ -116,8 +128,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                                         color: Color(0xFFFFEBEE),
                                         borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
                                       ),
-                                      headerMargin: EdgeInsets.symmetric(vertical: 4),
-                                      headerPadding: EdgeInsets.symmetric(vertical: 2),
+                                      headerMargin: EdgeInsets.symmetric(vertical: 0),
+                                      headerPadding: EdgeInsets.symmetric(vertical: 0),
                                     ),
                                     calendarStyle: const CalendarStyle(
                                       todayDecoration: BoxDecoration(color: Color(0xFFE0E0E0), shape: BoxShape.circle),
@@ -138,7 +150,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       // 下方內容區
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
                           borderRadius:
