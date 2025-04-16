@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Smartplanner</string>
+	<string>SmartPlanner</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>smartplanner</string>
+	<string>SmartPlanner</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -45,7 +45,22 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- 麥克風權限 -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>需要麥克風權限進行語音輸入</string>
+
+	<!-- 語音辨識權限 -->
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>需要語音辨識權限進行語音輸入</string>
+
+	<!-- Permission handler 所需設定 -->
+	<key>PERMISSION_MICROPHONE</key>
+	<string>需要麥克風權限進行語音輸入</string>
+
+	<key>PERMISSION_SPEECH_RECOGNIZER</key>
+	<string>需要語音辨識權限進行語音輸入</string>
+
+	<key>PERMISSION_NOTIFICATIONS</key>
+	<string>需要通知權限，以提供提醒功能</string>
 </dict>
 </plist>
