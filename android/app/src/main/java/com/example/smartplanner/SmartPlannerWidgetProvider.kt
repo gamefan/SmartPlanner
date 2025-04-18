@@ -40,7 +40,6 @@ class SmartPlannerWidgetProvider : AppWidgetProvider() {
                 setRemoteAdapter(R.id.memo_list_view, intent)
                 setEmptyView(R.id.memo_list_view, R.id.empty_view)
 
-                // ⭐️⭐️⭐️ 關鍵：設定 pending intent template ⭐️⭐️⭐️
                 val clickIntent = Intent(context, SmartPlannerWidgetProvider::class.java).apply {
                     action = "ACTION_TOGGLE_MEMO"
                 }
@@ -51,8 +50,9 @@ class SmartPlannerWidgetProvider : AppWidgetProvider() {
                     clickIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
-                setPendingIntentTemplate(R.id.memo_list_view, clickPendingIntent)
+                setPendingIntentTemplate(R.id.memo_list_view, clickPendingIntent) // ✅ 一定要設
             }
+
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
@@ -64,58 +64,58 @@ class SmartPlannerWidgetProvider : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-
         Log.d("SmartPlannerWidget", "onReceive called with action: ${intent.action}")
+        Log.d("SmartPlannerWidget", "Intent extras: ${intent.extras}")
 
-        if (intent.action == "ACTION_TOGGLE_MEMO") {
-            val memoId = intent.getStringExtra("memo_id")
-            Log.d("SmartPlannerWidget", "ACTION_TOGGLE_MEMO received, memoId: $memoId")
-
-            if (memoId == null) {
-                Log.w("SmartPlannerWidget", "No memo_id found in intent")
-                return
-            }
-
-            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-            val json = prefs.getString("flutter.memo_items", "[]") ?: "[]"
-
-            Log.d("SmartPlannerWidget", "Loaded memo JSON: $json")
-
-            try {
-                val gson = Gson()
-                val listType = object : TypeToken<MutableList<MemoItem>>() {}.type
-                val memoList: MutableList<MemoItem> = gson.fromJson(json, listType)
-
-                val index = memoList.indexOfFirst { it.id == memoId }
-                Log.d("SmartPlannerWidget", "Found memo index: $index")
-
-                if (index != -1) {
-                    val memo = memoList[index]
-                    Log.d("SmartPlannerWidget", "Memo found: $memo")
-
-                    if (memo.type == MemoType.TODO && memo.isCompleted != null) {
-                        val newStatus = !memo.isCompleted
-                        memoList[index] = memo.copy(isCompleted = newStatus)
-                        prefs.edit().putString("flutter.memo_items", gson.toJson(memoList)).apply()
-                        Log.d("SmartPlannerWidget", "Memo updated: isCompleted = $newStatus")
-                    } else {
-                        Log.w("SmartPlannerWidget", "Memo type is not TODO or isCompleted is null")
-                    }
-                } else {
-                    Log.w("SmartPlannerWidget", "Memo ID not found in list")
-                }
-
-                val appWidgetManager = AppWidgetManager.getInstance(context)
-                val component = ComponentName(context, SmartPlannerWidgetProvider::class.java)
-                appWidgetManager.notifyAppWidgetViewDataChanged(
-                    appWidgetManager.getAppWidgetIds(component),
-                    R.id.memo_list_view
-                )
-                Log.d("SmartPlannerWidget", "Widget notified for data changed")
-            } catch (e: Exception) {
-                Log.e("SmartPlannerWidget", "Error updating memo: ${e.message}", e)
-            }
+        // 這邊不能用 intent.action 判斷了（它是固定 template 的 action）
+        val memoId = intent.getStringExtra("memo_id")
+        if (memoId == null) {
+            Log.w("SmartPlannerWidget", "No memo_id found in intent")
+            return
         }
+
+        Log.d("SmartPlannerWidget", "Clicked memo id: $memoId")
+
+        val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        val json = prefs.getString("flutter.memo_items", "[]") ?: "[]"
+
+        Log.d("SmartPlannerWidget", "Loaded memo JSON: $json")
+
+        try {
+            val gson = Gson()
+            val listType = object : TypeToken<MutableList<MemoItem>>() {}.type
+            val memoList: MutableList<MemoItem> = gson.fromJson(json, listType)
+
+            val index = memoList.indexOfFirst { it.id == memoId }
+            Log.d("SmartPlannerWidget", "Found memo index: $index")
+
+            if (index != -1) {
+                val memo = memoList[index]
+                Log.d("SmartPlannerWidget", "Memo found: $memo")
+
+                if (memo.type == MemoType.TODO && memo.isCompleted != null) {
+                    val newStatus = !memo.isCompleted
+                    memoList[index] = memo.copy(isCompleted = newStatus)
+                    prefs.edit().putString("flutter.memo_items", gson.toJson(memoList)).apply()
+                    Log.d("SmartPlannerWidget", "Memo updated: isCompleted = $newStatus")
+                } else {
+                    Log.w("SmartPlannerWidget", "Memo type is not TODO or isCompleted is null")
+                }
+            } else {
+                Log.w("SmartPlannerWidget", "Memo ID not found in list")
+            }
+
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val component = ComponentName(context, SmartPlannerWidgetProvider::class.java)
+            appWidgetManager.notifyAppWidgetViewDataChanged(
+                appWidgetManager.getAppWidgetIds(component),
+                R.id.memo_list_view
+            )
+            Log.d("SmartPlannerWidget", "Widget notified for data changed")
+        } catch (e: Exception) {
+            Log.e("SmartPlannerWidget", "Error updating memo: ${e.message}", e)
+        }
+        
     }
 
 }
