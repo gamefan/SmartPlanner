@@ -94,15 +94,23 @@ class MemoWidgetFactory(private val context: Context, intent: Intent) : RemoteVi
         }
 
         // 加入勾選點擊事件處理
-        val fillInIntent = Intent(context, SmartPlannerWidgetProvider::class.java).apply {
-            // action = "ACTION_TOGGLE_MEMO"
-            Log.d("MemoWidgetFactory", "填入點擊 Intent 的 memo_id: ${memo.id}")
-            putExtra("memo_id", memo.id)
-        }
-        // val fillInIntent = Intent().apply {
+        // val fillInIntent = Intent(context, SmartPlannerWidgetProvider::class.java).apply {
+        //     // action = "ACTION_TOGGLE_MEMO"
         //     Log.d("MemoWidgetFactory", "填入點擊 Intent 的 memo_id: ${memo.id}")
-        //     // putExtra("memo_id", memo.id)
+        //     putExtra("memo_id", memo.id)
         // }
+        // // val fillInIntent = Intent().apply {
+        // //     Log.d("MemoWidgetFactory", "填入點擊 Intent 的 memo_id: ${memo.id}")
+        // //     // putExtra("memo_id", memo.id)
+        // // }
+        
+        val extras = Bundle().apply {
+            putString("memo_id", memo.id)
+        }
+
+        val fillInIntent = Intent().apply {
+            putExtras(extras)
+        }
 
         // 綁定item的點擊事件
         views.setOnClickFillInIntent(R.id.memo_item_container, fillInIntent)
