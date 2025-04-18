@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:smartplanner/core/services/notification_service.dart';
 import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/models/memo_item.dart';
@@ -20,6 +21,9 @@ class MemoNotifier extends StateNotifier<List<MemoItem>> {
   Future<void> addMemo(MemoItem item) async {
     state = [...state, item];
     await storage.saveMemos(state);
+
+    // 更新小工具
+    await HomeWidget.updateWidget(name: 'SmartPlannerWidgetProvider');
   }
 
   /// 根據 ID 刪除一筆項目（備註或待辦）
@@ -33,6 +37,9 @@ class MemoNotifier extends StateNotifier<List<MemoItem>> {
 
     state = state.where((item) => item.id != id).toList();
     await storage.saveMemos(state);
+
+    // 更新小工具
+    await HomeWidget.updateWidget(name: 'SmartPlannerWidgetProvider');
   }
 
   /// 根據 ID 更新完成狀態（僅適用於 todo）
@@ -45,6 +52,9 @@ class MemoNotifier extends StateNotifier<List<MemoItem>> {
           item,
     ];
     await storage.saveMemos(state);
+
+    // 更新小工具
+    await HomeWidget.updateWidget(name: 'SmartPlannerWidgetProvider');
   }
 
   /// 取得某日期的所有資料
@@ -69,6 +79,9 @@ class MemoNotifier extends StateNotifier<List<MemoItem>> {
   Future<void> clearAll() async {
     state = [];
     await storage.saveMemos(state);
+
+    // 更新小工具
+    await HomeWidget.updateWidget(name: 'SmartPlannerWidgetProvider');
   }
 }
 
