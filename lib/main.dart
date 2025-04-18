@@ -11,13 +11,14 @@ import 'package:smartplanner/features/hashtags/hashtag_manager_page.dart';
 import 'package:smartplanner/features/home/home_page.dart';
 import 'package:smartplanner/features/memo/all_memo_page.dart';
 import 'package:smartplanner/features/settings/settings_page.dart';
+import 'package:smartplanner/providers/hashtag_provider.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
 
 /// App 入口點
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService.initialize(); // ✅ 初始化通知
-  await requestNotificationPermission(); // ✅ 請求通知權限
+  await NotificationService.initialize(); // 初始化通知
+  await requestNotificationPermission(); // 請求通知權限
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -35,6 +36,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 初始化時讀取本地儲存的資料
+    ref.read(hashtagProvider);
     ref.read(memoProvider.notifier).init();
 
     return MaterialApp(

@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/features/home/widgets/memo_input_section.dart';
 import 'package:smartplanner/features/home/widgets/memo_list_section.dart';
+import 'package:smartplanner/providers/memo_provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -21,7 +22,27 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 /// 首頁畫面：整合月曆 + 輸入 + 清單功能
-class _HomePageState extends ConsumerState<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // App 回到前景時重新載入 Memo
+      ref.read(memoProvider.notifier).init();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);

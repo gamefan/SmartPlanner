@@ -106,8 +106,8 @@ class MemoItem {
       createdAt: DateTime.parse(json['createdAt']),
       targetTime: json['targetTime'] != null ? DateTime.parse(json['targetTime']) : null,
       isCompleted: json['isCompleted'],
-      hashtags: List<String>.from(json['hashtags']),
-      timeRangeType: TimeRangeType.values.byName(json['timeRangeType']),
+      hashtags: List<String>.from(json['hashtags'] ?? []),
+      timeRangeType: TimeRangeType.values.byName(json['timeRangeType'] ?? 'none'),
       notificationTime: json['notificationTime'] != null ? DateTime.parse(json['notificationTime']) : null,
       notificationId: json['notificationId'] != null ? json['notificationId'] as int : null,
     );

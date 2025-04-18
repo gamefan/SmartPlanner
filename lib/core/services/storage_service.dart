@@ -19,6 +19,7 @@ class StorageService {
   /// 載入 Memo 清單，若無則回傳空清單
   Future<List<MemoItem>> loadMemos() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.reload(); // 強制等重新讀取磁碟資料
     final jsonString = prefs.getString(memoKey);
     if (jsonString == null) return [];
 

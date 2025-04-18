@@ -48,7 +48,7 @@ class SmartPlannerWidgetProvider : AppWidgetProvider() {
                     context,
                     0,
                     clickIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
                 )
                 setPendingIntentTemplate(R.id.memo_list_view, clickPendingIntent) // ✅ 一定要設
             }
@@ -96,7 +96,24 @@ class SmartPlannerWidgetProvider : AppWidgetProvider() {
                 if (memo.type == MemoType.TODO && memo.isCompleted != null) {
                     val newStatus = !memo.isCompleted
                     memoList[index] = memo.copy(isCompleted = newStatus)
-                    prefs.edit().putString("flutter.memo_items", gson.toJson(memoList)).apply()
+
+                    val editor = prefs.edit()
+                    editor.putString("flutter.memo_items", gson.toJson(memoList))
+
+                    // 🔍 讀取現有的 flutter.key 清單（若不存在就建立）
+                    val rawKeys = prefs.getString("flutter.key", "[]")
+                    val gson = Gson()
+                    val keyList: MutableSet<String> = gson.fromJson(rawKeys, object : TypeToken<MutableSet<String>>() {}.type)
+
+                    // 加入 flutter.memo_items（避免重複）
+                    keyList.add("flutter.memo_items")
+
+                    // 寫回更新後的 flutter.key
+                    editor.putString("flutter.key", gson.toJson(keyList))
+
+                    editor.apply()
+
+
                     Log.d("SmartPlannerWidget", "Memo updated: isCompleted = $newStatus")
                 } else {
                     Log.w("SmartPlannerWidget", "Memo type is not TODO or isCompleted is null")

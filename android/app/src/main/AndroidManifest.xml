@@ -26,6 +26,7 @@
         <intent-filter>
             <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             <action android:name="ACTION_TOGGLE_MEMO" />
+            <category android:name="android.intent.category.DEFAULT" />
         </intent-filter>
         <meta-data
             android:name="android.appwidget.provider"

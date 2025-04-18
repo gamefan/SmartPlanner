@@ -9,6 +9,8 @@ SharedPreferences 讀資料    從 flutter.memoList 中取出 JSON 字串
 
 package com.example.smartplanner
 
+import android.app.PendingIntent
+import android.os.Bundle
 import android.util.Log
 import android.content.Context
 import android.content.Intent
@@ -21,9 +23,19 @@ import com.google.gson.reflect.TypeToken
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+
 enum class MemoType {
     @SerializedName("note") NOTE,
     @SerializedName("todo") TODO
+}
+
+enum class TimeRangeType {
+    @SerializedName("none") NONE,
+    @SerializedName("allDay") ALLDAY,
+    @SerializedName("morning") MORNING,
+    @SerializedName("afternoon") AFTERNOON,
+    @SerializedName("evening") EVENING,
+    @SerializedName("midnight") MIDNIGHT
 }
 
 data class MemoItem(
@@ -31,8 +43,12 @@ data class MemoItem(
     val content: String,
     val type: MemoType,
     val createdAt: String,
-    val targetTime: String?,
-    val isCompleted: Boolean?
+    val targetTime: String? = null,
+    val isCompleted: Boolean? = null,
+    val hashtags: List<String> = emptyList(),
+    val timeRangeType: TimeRangeType = TimeRangeType.NONE,
+    val notificationTime: String? = null,
+    val notificationId: Int? = null
 )
 
 class MemoWidgetFactory(private val context: Context, intent: Intent) : RemoteViewsService.RemoteViewsFactory {
@@ -94,19 +110,13 @@ class MemoWidgetFactory(private val context: Context, intent: Intent) : RemoteVi
         }
 
         // 加入勾選點擊事件處理
-        val fillInIntent = Intent(context, SmartPlannerWidgetProvider::class.java).apply {
-            // action = "ACTION_TOGGLE_MEMO"
+        val fillInIntent = Intent().apply {
             Log.d("MemoWidgetFactory", "填入點擊 Intent 的 memo_id: ${memo.id}")
             putExtra("memo_id", memo.id)
         }
-        // val fillInIntent = Intent().apply {
-        //     Log.d("MemoWidgetFactory", "填入點擊 Intent 的 memo_id: ${memo.id}")
-        //     // putExtra("memo_id", memo.id)
-        // }
-
+        
         // 綁定item的點擊事件
         views.setOnClickFillInIntent(R.id.memo_item_container, fillInIntent)
-
 
         return views
     }
