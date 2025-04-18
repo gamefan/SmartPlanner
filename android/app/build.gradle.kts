@@ -30,6 +30,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["flutterEmbedding"] = "2"
     }
 
     buildTypes {
@@ -53,6 +54,7 @@ android {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.android.play:core:1.10.3")
 }
 
 flutter {
