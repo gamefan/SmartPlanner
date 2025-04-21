@@ -22,6 +22,7 @@ class _HashtagManagePageState extends ConsumerState<HashtagManagePage> {
   final Set<String> _selectedIds = {};
   final TextEditingController _inputController = TextEditingController();
   String _input = '';
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -60,44 +61,60 @@ class _HashtagManagePageState extends ConsumerState<HashtagManagePage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _inputController,
-                    decoration: const InputDecoration(
-                      hintText: '新增 Hashtag',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child:
+                _isLoading
+                    ? Column(
+                      children: const [
+                        SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                        SizedBox(height: 8),
+                        Text('AI 分析中…請稍候', style: TextStyle(fontSize: 14)),
+                      ],
+                    )
+                    : Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _inputController,
+                            decoration: const InputDecoration(
+                              hintText: '新增 Hashtag',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            onChanged: (value) => setState(() => _input = value),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.send),
+                          onPressed:
+                              _input.trim().isEmpty
+                                  ? null
+                                  : () async {
+                                    setState(() => _isLoading = true);
+
+                                    final name = _input.trim();
+                                    final category = await HashtagInputAnalyzer.analyzeCategory(name);
+
+                                    final tag = Hashtag(
+                                      id: generateId(),
+                                      name: name,
+                                      category: category,
+                                      source: HashtagSource.manual,
+                                    );
+
+                                    ref.read(hashtagProvider.notifier).addHashtag(tag);
+                                    _inputController.clear();
+
+                                    setState(() {
+                                      _input = '';
+                                      _isLoading = false;
+                                    });
+                                  },
+                        ),
+                      ],
                     ),
-                    onChanged: (value) => setState(() => _input = value),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed:
-                      _input.trim().isEmpty
-                          ? null
-                          : () async {
-                            final name = _input.trim();
-                            final category = await HashtagInputAnalyzer.analyzeCategory(name);
-
-                            final tag = Hashtag(
-                              id: generateId(),
-                              name: name,
-                              category: category,
-                              source: HashtagSource.manual,
-                            );
-
-                            ref.read(hashtagProvider.notifier).addHashtag(tag);
-                            _inputController.clear();
-                            setState(() => _input = '');
-                          },
-                ),
-              ],
-            ),
           ),
+
           Expanded(
             child: ListView(
               children:
