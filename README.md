@@ -9,7 +9,7 @@ Smart Planner 是一款結合「行事曆 + 備忘錄 + 待辦清單 + AI 智慧
 ## 使用技術
 - Flutter
 - Riverpod 狀態管理
-- OpenAI GPT API（初期使用免費 API Key，可擴充為使用者自備或收費模式）
+- OpenAI GPT API（GPT 4o模型，搭配 Assistant API使用）
 - 語音轉文字（Speech to Text）
 - Flutter 本地儲存（SharedPreferences）
 
@@ -57,17 +57,33 @@ Smart Planner 是一款結合「行事曆 + 備忘錄 + 待辦清單 + AI 智慧
 ## 畫面規劃(參考圖片)
 1. 首頁（行事曆 + 今日紀錄與輸入區）
 
+規劃圖
 ![首頁一般](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/01.png)
 ![首頁展開](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/02.png)
 
-2. 通用備註頁
-3. 所有待辦清單頁
+完成圖
+![首頁一般](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F01.png)
+![首頁展開](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F02.png)
+![首頁語音輸入](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F03.png)
+![首頁側邊選單](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F04.png)
 
-![備注及待辦](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/03.png)
+2. 所有記事
+規劃圖
+![所有記事](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/03.png)
 
-4. 標籤管理頁
+完成圖
+![所有記事](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F05.png)
 
+3. 標籤管理頁
+規劃圖
 ![標籤管理](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/04.png)
+
+完成圖
+![標籤管理](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F06.png)
+
+3. 設定頁
+完成圖
+![設定畫面](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F07.png)
 
 ---
 
