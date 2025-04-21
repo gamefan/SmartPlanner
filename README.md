@@ -55,35 +55,54 @@ Smart Planner 是一款結合「行事曆 + 備忘錄 + 待辦清單 + AI 智慧
 
 
 ## 畫面規劃(參考圖片)
-1. 首頁（行事曆 + 今日紀錄與輸入區）
 
-規劃圖
-![首頁一般](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/01.png)
-![首頁展開](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/02.png)
+### 1. 首頁（行事曆 + 今日紀錄與輸入區）
 
-完成圖
-![首頁一般](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F01.png)
-![首頁展開](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F02.png)
-![首頁語音輸入](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F03.png)
-![首頁側邊選單](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F04.png)
+**規劃圖：**  
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/01.png" width="30%">
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/02.png" width="30%">
 
-2. 所有記事
-規劃圖
-![所有記事](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/03.png)
+<br>
 
-完成圖
-![所有記事](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F05.png)
+**完成圖：**  
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F01.png" width="30%">
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F02.png" width="30%">
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F03.png" width="30%">
 
-3. 標籤管理頁
-規劃圖
-![標籤管理](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/04.png)
+<br>
 
-完成圖
-![標籤管理](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F06.png)
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F04.png" width="30%">
 
-3. 設定頁
-完成圖
-![設定畫面](https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F07.png)
+---
+
+### 2. 所有記事
+
+**規劃圖：**  
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/03.png" width="30%">
+
+<br>
+
+**完成圖：**  
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F05.png" width="30%">
+
+---
+
+### 3. 標籤管理頁
+
+**規劃圖：**  
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/04.png" width="30%">
+
+<br>
+
+**完成圖：**  
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F06.png" width="30%">
+
+---
+
+### 4. 設定頁
+
+**完成圖：**  
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F07.png" width="30%">
 
 ---
 
