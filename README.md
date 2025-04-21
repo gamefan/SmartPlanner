@@ -106,6 +106,13 @@ Smart Planner 是一款結合「行事曆 + 備忘錄 + 待辦清單 + AI 智慧
 
 ---
 
+### 5. 桌面小工具(同步待辦事項)
+
+**完成圖：**  
+<img src="https://github.com/gamefan/SmartPlanner/blob/main/readmePic/F08.png" width="30%">
+
+---
+
 ## 使用者操作流程摘要
 1. 使用者輸入文字或語音內容
 2. 系統傳送至 OpenAI API 分析語意
