@@ -178,52 +178,8 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
     final contentToUse =
         (targetTime != null && !isSameDay(targetTime, selectedDate)) ? analysis.adjustedContent : inputText;
 
-    // 通知相關資料
-    DateTime? notificationTime;
-    int? notificationId;
-
-    // 🔔 建立通知判斷條件
-    if (analysis.type == MemoType.todo && targetTime != null && targetTime.isAfter(DateTime.now())) {
-      final storage = StorageService();
-      final earliest = await storage.loadEarliestHour() ?? 8;
-      final latest = await storage.loadLatestHour() ?? 22;
-      final behavior = await storage.loadOutOfRangeBehavior() ?? 'skip';
-
-      // 設定通知時間
-      // 如果時間在最早與最晚之間，則使用 targetTime
-      // 調整模式(adjust)如果時間在最早之前，則調整為最早時間，如果時間在最晚之後，則使用最晚時間
-      // skip 模式則不建立通知
-      final hour = targetTime.hour;
-      if (hour < earliest && behavior == 'adjust') {
-        notificationTime = DateTime(targetTime.year, targetTime.month, targetTime.day, earliest);
-      } else if (hour > latest && behavior == 'adjust') {
-        notificationTime = DateTime(targetTime.year, targetTime.month, targetTime.day, latest);
-      } else if (hour < earliest || hour > latest) {
-        notificationTime = null; // skip 建立
-      } else {
-        notificationTime = targetTime;
-      }
-
-      // 🔁 避免 ID 重複
-      if (notificationTime != null) {
-        final pending = await NotificationService.getPendingNotifications();
-        final usedIds = pending.map((p) => p.id).toSet();
-
-        int newId = DateTime.now().millisecondsSinceEpoch.remainder(1000000);
-        while (usedIds.contains(newId)) {
-          newId = (newId + 1) % 1000000;
-        }
-
-        notificationId = newId;
-
-        await NotificationService.scheduleNotification(
-          id: notificationId,
-          title: '待辦提醒',
-          body: contentToUse,
-          scheduledTime: notificationTime,
-        );
-      }
-    }
+    // 通知相關資料，建立通知判斷條件
+    final (notificationTime, notificationId) = await buildNotification(contentToUse, targetTime);
 
     // 傳入 notificationTime 與 notificationId
     await viewModel.submitMemo(

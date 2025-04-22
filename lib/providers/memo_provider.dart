@@ -26,6 +26,18 @@ class MemoNotifier extends StateNotifier<List<MemoItem>> {
     await HomeWidget.updateWidget(name: 'SmartPlannerWidgetProvider');
   }
 
+  /// 根據 ID 更新指定項目內容
+  Future<void> updateMemo(MemoItem updated) async {
+    state = [
+      for (final item in state)
+        if (item.id == updated.id) updated else item,
+    ];
+    await storage.saveMemos(state);
+
+    // 更新小工具
+    await HomeWidget.updateWidget(name: 'SmartPlannerWidgetProvider');
+  }
+
   /// 根據 ID 刪除一筆項目（備註或待辦）
   Future<void> deleteMemo(String id) async {
     final target = state.where((item) => item.id == id).cast<MemoItem?>().firstOrNull;

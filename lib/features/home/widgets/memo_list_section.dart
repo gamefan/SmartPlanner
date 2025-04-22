@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartplanner/core/utils/dialog_util.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
+import 'package:smartplanner/features/home/widgets/edit_memo_dialog.dart';
 import 'package:smartplanner/models/enum.dart';
 import 'package:smartplanner/models/memo_item.dart';
 import 'package:smartplanner/providers/memo_provider.dart';
@@ -107,14 +108,38 @@ class _TodoTile extends ConsumerWidget {
                     ? Text('時間：${item.targetTime!.hour}:${item.targetTime!.minute.toString().padLeft(2, '0')}')
                     : null,
             leading: Checkbox(value: item.isCompleted ?? false, onChanged: (_) => provider.toggleTodoStatus(item.id)),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () async {
-                final confirm = await showConfirmDeleteDialog(context);
-                if (confirm) {
-                  provider.deleteMemo(item.id);
-                }
-              },
+            trailing: IntrinsicWidth(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 20),
+                    tooltip: '編輯',
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                    onPressed: () async {
+                      await showDialog(
+                        context: context,
+                        barrierDismissible: false, // ⛔️ 點外面不會關閉
+                        builder: (_) => EditMemoDialog(item: item),
+                      );
+                    },
+                  ),
+                  SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    tooltip: '刪除',
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                    onPressed: () async {
+                      final confirm = await showConfirmDeleteDialog(context);
+                      if (confirm) {
+                        ref.read(memoProvider.notifier).deleteMemo(item.id);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           if (item.hashtags.isNotEmpty)
@@ -138,7 +163,6 @@ class _NoteTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = ref.read(memoProvider.notifier);
     return Container(
       decoration: const BoxDecoration(
         border: Border(
@@ -154,14 +178,38 @@ class _NoteTile extends ConsumerWidget {
           ListTile(
             dense: true,
             title: Text(item.content, style: const TextStyle(fontSize: 16)),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () async {
-                final confirm = await showConfirmDeleteDialog(context);
-                if (confirm) {
-                  provider.deleteMemo(item.id);
-                }
-              },
+            trailing: IntrinsicWidth(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 20),
+                    tooltip: '編輯',
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                    onPressed: () async {
+                      await showDialog(
+                        context: context,
+                        barrierDismissible: false, // ⛔️ 點外面不會關閉
+                        builder: (_) => EditMemoDialog(item: item),
+                      );
+                    },
+                  ),
+                  SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    tooltip: '刪除',
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                    onPressed: () async {
+                      final confirm = await showConfirmDeleteDialog(context);
+                      if (confirm) {
+                        ref.read(memoProvider.notifier).deleteMemo(item.id);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           if (item.hashtags.isNotEmpty)
