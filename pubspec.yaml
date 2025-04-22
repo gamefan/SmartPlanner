@@ -48,6 +48,7 @@ dependencies:
   collection: ^1.19.1
   flutter_launcher_icons: ^0.14.3
   home_widget: ^0.7.0+1
+  flutter_slidable: ^4.0.0
 
 dev_dependencies:
   flutter_test:

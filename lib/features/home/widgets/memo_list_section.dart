@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:smartplanner/core/utils/dialog_util.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/features/home/widgets/edit_memo_dialog.dart';
@@ -77,147 +78,213 @@ class _MemoListSectionState extends ConsumerState<MemoListSection> {
   }
 }
 
-/// 待辦項目 tile（可勾選與刪除）
-class _TodoTile extends ConsumerWidget {
+/// 待辦項目 tile（可勾選與編輯）
+class _TodoTile extends ConsumerStatefulWidget {
   final MemoItem item;
   const _TodoTile({required this.item});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_TodoTile> createState() => _TodoTileState();
+}
+
+class _TodoTileState extends ConsumerState<_TodoTile> {
+  bool _longPressTriggered = false;
+
+  /// 處理長按事件，500ms 後觸發
+  void _handlePressStart(BuildContext context) {
+    _longPressTriggered = false;
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted || _longPressTriggered) return;
+
+      _longPressTriggered = true;
+
+      final slidable = Slidable.of(context);
+      if (slidable != null) {
+        final currentType = slidable.actionPaneType.value;
+        if (currentType == ActionPaneType.start) {
+          slidable.close(); // 已展開 → 收起
+        } else {
+          slidable.openStartActionPane(); // 沒展開 → 打開
+        }
+      }
+    });
+  }
+
+  void _handleCancel() {
+    _longPressTriggered = true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
     final provider = ref.read(memoProvider.notifier);
 
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Color(0xFFEEEEEE), // 非常淡的灰（你可以調成 0xFFF2F2F2 更淡）
-            width: 1,
-          ),
-        ),
-      ),
-      child: Column(
+    return Slidable(
+      key: ValueKey(item.id),
+      startActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.4,
         children: [
-          ListTile(
-            dense: true,
-            title: Text(
-              item.content,
-              style: TextStyle(fontSize: 16, decoration: item.isCompleted == true ? TextDecoration.lineThrough : null),
-            ),
-            subtitle:
-                item.targetTime != null
-                    ? Text('時間：${item.targetTime!.hour}:${item.targetTime!.minute.toString().padLeft(2, '0')}')
-                    : null,
-            leading: Checkbox(value: item.isCompleted ?? false, onChanged: (_) => provider.toggleTodoStatus(item.id)),
-            trailing: IntrinsicWidth(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          SlidableAction(
+            onPressed: (_) async {
+              await showDialog(context: context, barrierDismissible: false, builder: (_) => EditMemoDialog(item: item));
+            },
+            backgroundColor: Colors.blue.shade600,
+            foregroundColor: Colors.white,
+            icon: Icons.edit,
+            label: '編輯',
+          ),
+          SlidableAction(
+            onPressed: (_) async {
+              final confirm = await showConfirmDeleteDialog(context);
+              if (confirm) {
+                ref.read(memoProvider.notifier).deleteMemo(item.id);
+              }
+            },
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            icon: Icons.delete_outline,
+            label: '刪除',
+          ),
+        ],
+      ),
+      child: Builder(
+        builder: (slidableContext) {
+          return Listener(
+            onPointerDown: (_) => _handlePressStart(slidableContext),
+            onPointerUp: (_) => _handleCancel(),
+            child: Container(
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE), width: 1))),
+              child: Column(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 20),
-                    tooltip: '編輯',
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                    onPressed: () async {
-                      await showDialog(
-                        context: context,
-                        barrierDismissible: false, // ⛔️ 點外面不會關閉
-                        builder: (_) => EditMemoDialog(item: item),
-                      );
-                    },
+                  ListTile(
+                    dense: true,
+                    leading: Checkbox(
+                      value: item.isCompleted ?? false,
+                      onChanged: (_) => provider.toggleTodoStatus(item.id),
+                    ),
+                    title: Text(
+                      item.content,
+                      style: TextStyle(
+                        fontSize: 16,
+                        decoration: item.isCompleted == true ? TextDecoration.lineThrough : null,
+                      ),
+                    ),
+                    subtitle:
+                        item.targetTime != null
+                            ? Text('時間：${item.targetTime!.hour}:${item.targetTime!.minute.toString().padLeft(2, '0')}')
+                            : null,
                   ),
-                  SizedBox(width: 4),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 20),
-                    tooltip: '刪除',
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                    onPressed: () async {
-                      final confirm = await showConfirmDeleteDialog(context);
-                      if (confirm) {
-                        ref.read(memoProvider.notifier).deleteMemo(item.id);
-                      }
-                    },
-                  ),
+                  if (item.hashtags.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 8, bottom: 8),
+                        child: MemoHashtagRow(hashtagIds: item.hashtags),
+                      ),
+                    ),
                 ],
               ),
             ),
-          ),
-          if (item.hashtags.isNotEmpty)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 16, right: 8, bottom: 8),
-                child: MemoHashtagRow(hashtagIds: item.hashtags),
-              ),
-            ),
-        ],
+          );
+        },
       ),
     );
   }
 }
 
-/// 備註 tile（只能顯示與刪除）
-class _NoteTile extends ConsumerWidget {
+/// 備註 tile（只備註文字）
+class _NoteTile extends ConsumerStatefulWidget {
   final MemoItem item;
   const _NoteTile({required this.item});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Color(0xFFEEEEEE), // 非常淡的灰
-            width: 1,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  ConsumerState<_NoteTile> createState() => _NoteTileState();
+}
+
+class _NoteTileState extends ConsumerState<_NoteTile> {
+  bool _longPressTriggered = false;
+
+  /// 處理長按事件，500ms 後觸發
+  void _handlePressStart(BuildContext context) {
+    _longPressTriggered = false;
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted || _longPressTriggered) return;
+
+      _longPressTriggered = true;
+
+      final slidable = Slidable.of(context);
+      if (slidable != null) {
+        final currentType = slidable.actionPaneType.value;
+        if (currentType == ActionPaneType.start) {
+          slidable.close(); // 已展開 → 收起
+        } else {
+          slidable.openStartActionPane(); // 沒展開 → 打開
+        }
+      }
+    });
+  }
+
+  void _handleCancel() {
+    _longPressTriggered = true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+
+    return Slidable(
+      key: ValueKey(item.id),
+      startActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.4,
         children: [
-          ListTile(
-            dense: true,
-            title: Text(item.content, style: const TextStyle(fontSize: 16)),
-            trailing: IntrinsicWidth(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          SlidableAction(
+            onPressed: (_) async {
+              await showDialog(context: context, barrierDismissible: false, builder: (_) => EditMemoDialog(item: item));
+            },
+            backgroundColor: Colors.blue.shade600,
+            foregroundColor: Colors.white,
+            icon: Icons.edit,
+            label: '編輯',
+          ),
+          SlidableAction(
+            onPressed: (_) async {
+              final confirm = await showConfirmDeleteDialog(context);
+              if (confirm) {
+                ref.read(memoProvider.notifier).deleteMemo(item.id);
+              }
+            },
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            icon: Icons.delete_outline,
+            label: '刪除',
+          ),
+        ],
+      ),
+      child: Builder(
+        builder: (slidableContext) {
+          return Listener(
+            onPointerDown: (_) => _handlePressStart(slidableContext),
+            onPointerUp: (_) => _handleCancel(),
+            child: Container(
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE), width: 1))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 20),
-                    tooltip: '編輯',
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                    onPressed: () async {
-                      await showDialog(
-                        context: context,
-                        barrierDismissible: false, // ⛔️ 點外面不會關閉
-                        builder: (_) => EditMemoDialog(item: item),
-                      );
-                    },
-                  ),
-                  SizedBox(width: 4),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 20),
-                    tooltip: '刪除',
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                    onPressed: () async {
-                      final confirm = await showConfirmDeleteDialog(context);
-                      if (confirm) {
-                        ref.read(memoProvider.notifier).deleteMemo(item.id);
-                      }
-                    },
-                  ),
+                  ListTile(dense: true, title: Text(item.content, style: const TextStyle(fontSize: 16))),
+                  if (item.hashtags.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 8, bottom: 8),
+                      child: MemoHashtagRow(hashtagIds: item.hashtags),
+                    ),
                 ],
               ),
             ),
-          ),
-          if (item.hashtags.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(left: 16, right: 8, bottom: 8),
-              child: MemoHashtagRow(hashtagIds: item.hashtags),
-            ),
-        ],
+          );
+        },
       ),
     );
   }
