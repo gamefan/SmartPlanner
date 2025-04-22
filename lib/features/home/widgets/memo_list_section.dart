@@ -124,7 +124,7 @@ class _TodoTileState extends ConsumerState<_TodoTile> {
       key: ValueKey(item.id),
       startActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.4,
+        extentRatio: 0.5,
         children: [
           SlidableAction(
             onPressed: (_) async {
@@ -134,6 +134,7 @@ class _TodoTileState extends ConsumerState<_TodoTile> {
             foregroundColor: Colors.white,
             icon: Icons.edit,
             label: '編輯',
+            flex: 2,
           ),
           SlidableAction(
             onPressed: (_) async {
@@ -146,6 +147,7 @@ class _TodoTileState extends ConsumerState<_TodoTile> {
             foregroundColor: Colors.white,
             icon: Icons.delete_outline,
             label: '刪除',
+            flex: 2,
           ),
         ],
       ),
@@ -239,7 +241,7 @@ class _NoteTileState extends ConsumerState<_NoteTile> {
       key: ValueKey(item.id),
       startActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.4,
+        extentRatio: 0.5,
         children: [
           SlidableAction(
             onPressed: (_) async {
@@ -249,6 +251,7 @@ class _NoteTileState extends ConsumerState<_NoteTile> {
             foregroundColor: Colors.white,
             icon: Icons.edit,
             label: '編輯',
+            flex: 2,
           ),
           SlidableAction(
             onPressed: (_) async {
@@ -261,6 +264,7 @@ class _NoteTileState extends ConsumerState<_NoteTile> {
             foregroundColor: Colors.white,
             icon: Icons.delete_outline,
             label: '刪除',
+            flex: 2,
           ),
         ],
       ),
