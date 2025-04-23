@@ -128,7 +128,12 @@ class _TodoTileState extends ConsumerState<_TodoTile> {
         children: [
           SlidableAction(
             onPressed: (_) async {
-              await showDialog(context: context, barrierDismissible: false, builder: (_) => EditMemoDialog(item: item));
+              final selectedDate = ref.read(homeViewModelProvider).selectedDate;
+              await showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => EditMemoDialog(item: item, selectedDate: selectedDate),
+              );
             },
             backgroundColor: Colors.blue.shade600,
             foregroundColor: Colors.white,
@@ -245,7 +250,13 @@ class _NoteTileState extends ConsumerState<_NoteTile> {
         children: [
           SlidableAction(
             onPressed: (_) async {
-              await showDialog(context: context, barrierDismissible: false, builder: (_) => EditMemoDialog(item: item));
+              final selectedDate = ref.read(homeViewModelProvider).selectedDate;
+
+              await showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => EditMemoDialog(item: item, selectedDate: selectedDate),
+              );
             },
             backgroundColor: Colors.blue.shade600,
             foregroundColor: Colors.white,

@@ -11,8 +11,8 @@ import 'package:intl/intl.dart';
 
 class EditMemoDialog extends ConsumerStatefulWidget {
   final MemoItem item;
-
-  const EditMemoDialog({super.key, required this.item});
+  final DateTime selectedDate;
+  const EditMemoDialog({super.key, required this.item, required this.selectedDate});
 
   @override
   ConsumerState<EditMemoDialog> createState() => _EditMemoDialogState();
@@ -39,7 +39,7 @@ class _EditMemoDialogState extends ConsumerState<EditMemoDialog> {
 
   /// 顯示時間選擇器，並更新目標時間
   Future<void> _pickTime(BuildContext context) async {
-    final calendarDate = ref.read(homeViewModelProvider).selectedDate;
+    final calendarDate = widget.selectedDate;
 
     // 初始時間使用 targetTime，有的話帶時間，沒有的話只用日期的 00:00
     final baseTime = _targetTime ?? calendarDate;
