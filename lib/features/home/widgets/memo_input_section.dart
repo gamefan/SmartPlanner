@@ -4,9 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:smartplanner/core/services/input_analyzer/hashtag_input_analyzer.dart';
 import 'package:smartplanner/core/services/input_analyzer/memo_input_analyzer.dart';
-import 'package:smartplanner/core/services/notification_service.dart';
 import 'package:smartplanner/core/services/speech_input_service.dart';
-import 'package:smartplanner/core/services/storage_service.dart';
 import 'package:smartplanner/core/utils/util.dart';
 import 'package:smartplanner/features/home/home_view_model.dart';
 import 'package:smartplanner/models/enum.dart';
@@ -100,6 +98,9 @@ class _MemoInputSectionState extends ConsumerState<MemoInputSection> {
                 context,
                 onResult: (text) {
                   ref.read(homeViewModelProvider.notifier).updateInput(text);
+                  _controller.text = text;
+                  //自動聚焦到尾端
+                  _controller.selection = TextSelection.collapsed(offset: text.length);
                 },
               );
             },

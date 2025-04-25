@@ -3,9 +3,7 @@ import 'package:smartplanner/core/services/notification_service.dart';
 import 'package:smartplanner/core/services/storage_service.dart';
 import 'package:uuid/uuid.dart';
 import 'package:smartplanner/models/enum.dart';
-
 import 'dart:io';
-import 'package:flutter/material.dart';
 
 /// 請求通知權限
 Future<void> openExactAlarmSettings() async {
